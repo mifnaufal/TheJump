@@ -1,1725 +1,1902 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TheJump</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Adventure Solo - Mario Style Platformer</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            overflow: hidden;
-            touch-action: manipulation;
-            background: linear-gradient(to bottom, #87CEEB, #1E90FF);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Arial", sans-serif;
+        overflow: hidden;
+        touch-action: manipulation;
+        background: linear-gradient(to bottom, #87ceeb, #1e90ff);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      #gameContainer {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        height: 600px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        background-color: #87ceeb;
+      }
+
+      #gameCanvas {
+        display: block;
+      }
+
+      .ui-container {
+        position: absolute;
+        top: 10px;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        z-index: 10;
+      }
+
+      .player-info {
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 10px;
+        font-size: 16px;
+      }
+
+      .player1 {
+        border-left: 3px solid #ff4444;
+      }
+
+      .level-info {
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 10px;
+        font-size: 16px;
+      }
+
+      .power-up-indicator {
+        position: absolute;
+        top: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: yellow;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        z-index: 10;
+        display: none;
+      }
+
+      .checkpoint-indicator {
+        position: absolute;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: #00ff00;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        z-index: 10;
+        display: none;
+      }
+
+      .mobile-controls {
+        position: fixed;
+        bottom: 20px;
+        left: 0;
+        width: 100%;
+        display: none;
+        z-index: 100;
+        padding: 0 5%;
+      }
+
+      .left-controls {
+        position: absolute;
+        left: 0;
+        width: 40%;
+        display: flex;
+        justify-content: space-around;
+      }
+
+      .right-controls {
+        position: absolute;
+        right: 0;
+        width: 40%;
+        display: flex;
+        justify-content: center;
+      }
+
+      .btn {
+        width: 60px;
+        height: 60px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 20px;
+        user-select: none;
+        touch-action: manipulation;
+      }
+
+      .btn:active {
+        background: rgba(0, 0, 0, 0.6);
+        transform: scale(0.95);
+      }
+
+      .left-btn::before {
+        content: "←";
+      }
+
+      .right-btn::before {
+        content: "→";
+      }
+
+      .jump-btn::before {
+        content: "↑";
+      }
+
+      .menu-screen,
+      .game-over-screen,
+      .level-complete-screen,
+      .game-win-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        color: white;
+      }
+
+      .menu-screen h1,
+      .game-over-screen h1,
+      .level-complete-screen h1,
+      .game-win-screen h1 {
+        font-size: 48px;
+        margin-bottom: 30px;
+        text-shadow: 0 0 10px gold;
+        color: #ffd700;
+      }
+
+      .btn-menu {
+        background: #4caf50;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 20px;
+        border-radius: 10px;
+        margin: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 200px;
+      }
+
+      .btn-menu:hover {
+        background: #45a049;
+        transform: scale(1.05);
+      }
+
+      .game-over-screen .score-display,
+      .level-complete-screen .score-display,
+      .game-win-screen .score-display {
+        font-size: 24px;
+        margin: 20px 0;
+        text-align: center;
+      }
+
+      .death-counter {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 10px;
+        font-size: 16px;
+        z-index: 10;
+      }
+
+      .instructions {
+        position: absolute;
+        bottom: 10px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        color: white;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 5px;
+        font-size: 14px;
+        z-index: 10;
+      }
+
+      @media (max-width: 768px) {
         #gameContainer {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            height: 600px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            overflow: hidden;
-            background-color: #87CEEB;
+          height: 80vh;
         }
-        
-        #gameCanvas {
-            display: block;
-        }
-        
-        .ui-container {
-            position: absolute;
-            top: 10px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            z-index: 10;
-        }
-        
-        .player-info {
-            background: rgba(0,0,0,0.5);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 10px;
-            font-size: 16px;
-        }
-        
-        .player1 {
-            border-left: 3px solid #FF4444;
-        }
-        
-        .level-info {
-            background: rgba(0,0,0,0.5);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 10px;
-            font-size: 16px;
-        }
-        
-        .power-up-indicator {
-            position: absolute;
-            top: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            color: yellow;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            z-index: 10;
-            display: none;
-        }
-        
-        .checkpoint-indicator {
-            position: absolute;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            color: #00FF00;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            z-index: 10;
-            display: none;
-        }
-        
+
         .mobile-controls {
-            position: fixed;
-            bottom: 20px;
-            left: 0;
-            width: 100%;
-            display: none;
-            z-index: 100;
-            padding: 0 5%;
+          display: flex;
         }
-        
-        .left-controls {
-            position: absolute;
-            left: 0;
-            width: 40%;
-            display: flex;
-            justify-content: space-around;
+
+        .ui-container {
+          font-size: 14px;
         }
-        
-        .right-controls {
-            position: absolute;
-            right: 0;
-            width: 40%;
-            display: flex;
-            justify-content: center;
+
+        /* Landscape orientation */
+        @media (orientation: landscape) {
+          .mobile-controls {
+            bottom: 30px;
+          }
+
+          .left-controls,
+          .right-controls {
+            height: 80px;
+          }
         }
-        
-        .btn {
-            width: 60px;
-            height: 60px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 20px;
-            user-select: none;
-            touch-action: manipulation;
-        }
-        
-        .btn:active {
-            background: rgba(0,0,0,0.6);
-            transform: scale(0.95);
-        }
-        
-        .left-btn::before {
-            content: "←";
-        }
-        
-        .right-btn::before {
-            content: "→";
-        }
-        
-        .jump-btn::before {
-            content: "↑";
-        }
-        
-        .menu-screen, .game-over-screen, .level-complete-screen, .game-win-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            color: white;
-        }
-        
-        .menu-screen h1, .game-over-screen h1, .level-complete-screen h1, .game-win-screen h1 {
-            font-size: 48px;
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px gold;
-            color: #FFD700;
-        }
-        
-        .btn-menu {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 20px;
-            border-radius: 10px;
-            margin: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 200px;
-        }
-        
-        .btn-menu:hover {
-            background: #45a049;
-            transform: scale(1.05);
-        }
-        
-        .game-over-screen .score-display, 
-        .level-complete-screen .score-display,
-        .game-win-screen .score-display {
-            font-size: 24px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .death-counter {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.5);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 10px;
-            font-size: 16px;
-            z-index: 10;
-        }
-        
-        .instructions {
-            position: absolute;
-            bottom: 10px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: white;
-            background: rgba(0,0,0,0.3);
-            padding: 5px;
-            font-size: 14px;
-            z-index: 10;
-        }
-        
-        @media (max-width: 768px) {
-            #gameContainer {
-                height: 80vh;
-            }
-            
-            .mobile-controls {
-                display: flex;
-            }
-            
-            .ui-container {
-                font-size: 14px;
-            }
-            
-            /* Landscape orientation */
-            @media (orientation: landscape) {
-                .mobile-controls {
-                    bottom: 30px;
-                }
-                
-                .left-controls, .right-controls {
-                    height: 80px;
-                }
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="gameContainer">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        
-        <div class="ui-container">
-            <div class="player-info player1">SCORE: <span id="score">0</span> | ❤ <span id="lives">3</span></div>
-            <div class="level-info">LEVEL <span id="currentLevel">1</span></div>
+      <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+      <div class="ui-container">
+        <div class="player-info player1">
+          SCORE: <span id="score">0</span> | ❤ <span id="lives">3</span>
         </div>
-        
-        <div class="death-counter">DEATHS: <span id="deathCount">0</span>/2</div>
-        
-        <div class="power-up-indicator" id="powerUpIndicator"></div>
-        <div class="checkpoint-indicator" id="checkpointIndicator">CHECKPOINT ACHIEVED!</div>
-        
-        <div class="instructions">
-            PC: WASD to move and jump | Mobile: Touch controls on screen
+        <div class="level-info">LEVEL <span id="currentLevel">1</span></div>
+      </div>
+
+      <div class="death-counter">DEATHS: <span id="deathCount">0</span>/2</div>
+
+      <div class="power-up-indicator" id="powerUpIndicator"></div>
+      <div class="checkpoint-indicator" id="checkpointIndicator">
+        CHECKPOINT ACHIEVED!
+      </div>
+
+      <div class="instructions">
+        PC: WASD to move and jump | Mobile: Touch controls on screen
+      </div>
+
+      <div class="menu-screen" id="menuScreen">
+        <h1>ADVENTURE SOLO</h1>
+        <button class="btn-menu" id="startGameBtn">START GAME</button>
+        <p style="margin-top: 20px; color: #ccc; text-align: center">
+          Use WASD to move and jump<br />
+          or touch controls on mobile
+        </p>
+        <p style="margin-top: 10px; color: #ccc; text-align: center">
+          2 chances per level<br />
+          5 levels to complete
+        </p>
+      </div>
+
+      <div class="game-over-screen" id="gameOverScreen" style="display: none">
+        <h1>GAME OVER</h1>
+        <div class="score-display">
+          <div>Score: <span id="finalScore">0</span></div>
+          <div>Level: <span id="finalLevel">1</span></div>
         </div>
-        
-        <div class="menu-screen" id="menuScreen">
-            <h1>TheJump</h1>
-            <button class="btn-menu" id="startGameBtn">START GAME</button>
-            <p style="margin-top: 20px; color: #ccc; text-align: center;">
-                Use WASD to move and jump<br>
-                or touch controls on mobile
-            </p>
-            <p style="margin-top: 10px; color: #ccc; text-align: center;">
-                2 chances per level<br>
-                5 levels to complete
-            </p>
+        <button class="btn-menu" id="restartBtn">PLAY AGAIN</button>
+      </div>
+
+      <div
+        class="level-complete-screen"
+        id="levelCompleteScreen"
+        style="display: none"
+      >
+        <h1>LEVEL COMPLETE!</h1>
+        <div class="score-display">
+          <div>Score: <span id="levelScore">0</span></div>
+          <div>Level: <span id="completedLevel">1</span></div>
         </div>
-        
-        <div class="game-over-screen" id="gameOverScreen" style="display: none;">
-            <h1>GAME OVER</h1>
-            <div class="score-display">
-                <div>Score: <span id="finalScore">0</span></div>
-                <div>Level: <span id="finalLevel">1</span></div>
-            </div>
-            <button class="btn-menu" id="restartBtn">PLAY AGAIN</button>
+        <button class="btn-menu" id="nextLevelBtn">NEXT LEVEL</button>
+      </div>
+
+      <div class="game-win-screen" id="gameWinScreen" style="display: none">
+        <h1>CONGRATULATIONS!</h1>
+        <div class="score-display">
+          <div>You Completed All 5 Levels!</div>
+          <div>Total Score: <span id="winScore">0</span></div>
         </div>
-        
-        <div class="level-complete-screen" id="levelCompleteScreen" style="display: none;">
-            <h1>LEVEL COMPLETE!</h1>
-            <div class="score-display">
-                <div>Score: <span id="levelScore">0</span></div>
-                <div>Level: <span id="completedLevel">1</span></div>
-            </div>
-            <button class="btn-menu" id="nextLevelBtn">NEXT LEVEL</button>
+        <button class="btn-menu" id="playAgainBtn">PLAY AGAIN</button>
+      </div>
+
+      <div class="mobile-controls">
+        <div class="left-controls">
+          <div class="btn left-btn" id="leftBtn"></div>
+          <div class="btn right-btn" id="rightBtn"></div>
         </div>
-        
-        <div class="game-win-screen" id="gameWinScreen" style="display: none;">
-            <h1>CONGRATULATIONS!</h1>
-            <div class="score-display">
-                <div>You Completed All 5 Levels!</div>
-                <div>Total Score: <span id="winScore">0</span></div>
-            </div>
-            <button class="btn-menu" id="playAgainBtn">PLAY AGAIN</button>
+        <div class="right-controls">
+          <div class="btn jump-btn" id="jumpBtn"></div>
         </div>
-        
-        <div class="mobile-controls">
-            <div class="left-controls">
-                <div class="btn left-btn" id="leftBtn"></div>
-                <div class="btn right-btn" id="rightBtn"></div>
-            </div>
-            <div class="right-controls">
-                <div class="btn jump-btn" id="jumpBtn"></div>
-            </div>
-        </div>
+      </div>
     </div>
 
     <script>
-        // Game variables
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const gameContainer = document.getElementById('gameContainer');
-        
-        // Game state
-        let gameState = "menu"; // menu, playing, gameOver, levelComplete, gameWin
-        let currentLevel = 1;
-        let deathsThisLevel = 0;
-        
-        // Camera system
-        const camera = {
-            x: 0,
-            y: 0,
-            width: canvas.width,
-            height: canvas.height,
-            lerpFactor: 0.1
-        };
-        
-        // Player class
-        class Player {
-            constructor(x, y, color, controls) {
-                this.x = x;
-                this.y = y;
-                this.width = 30;
-                this.height = 50;
-                this.velocityX = 0;
-                this.velocityY = 0;
-                this.speed = 5;
-                this.jumpPower = 12;
-                this.color = color;
-                this.lives = 3;
-                this.score = 0;
-                this.controls = controls;
-                this.isJumping = false;
-                this.invulnerable = false;
-                this.invulnerableTimer = 0;
-                this.direction = 1; // 1 = right, -1 = left
-                this.animationFrame = 0;
-                this.animationSpeed = 0.2;
-                this.startX = x;
-                this.startY = y;
-                this.checkpointX = x;
-                this.checkpointY = y;
-            }
-            
-            update() {
-                // Apply gravity
-                this.velocityY += 0.5;
-                this.x += this.velocityX;
-                this.y += this.velocityY;
-                
-                // Friction
-                this.velocityX *= 0.9;
-                
-                // Screen boundaries (left)
-                if (this.x < 0) {
-                    this.x = 0;
-                    this.velocityX = 0;
-                }
-                
-                // Check if fallen off screen
-                if (this.y > canvas.height) {
-                    this.lives--;
-                    document.getElementById('lives').textContent = this.lives;
-                    this.resetPosition();
-                }
-                
-                // Invulnerability
-                if (this.invulnerable) {
-                    this.invulnerableTimer--;
-                    if (this.invulnerableTimer <= 0) {
-                        this.invulnerable = false;
-                    }
-                }
-                
-                // Animation
-                this.animationFrame += this.animationSpeed * Math.abs(this.velocityX);
-                if (this.animationFrame >= 4) this.animationFrame = 0;
-            }
-            
-            draw() {
-                // Draw player
-                ctx.fillStyle = this.invulnerable ? 'blue' : this.color;
-                ctx.fillRect(this.x - camera.x, this.y, this.width, this.height);
-                
-                // Draw eyes
-                ctx.fillStyle = 'white';
-                const eyeX = this.x - camera.x + (this.direction > 0 ? this.width - 8 : 3);
-                ctx.fillRect(eyeX, this.y + 10, 5, 5);
-                
-                // Draw animation effect when invulnerable
-                if (this.invulnerable) {
-                    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.arc(this.x - camera.x + this.width/2, this.y + this.height/2, 
-                           15 + 5 * Math.sin(Date.now() / 100), 0, Math.PI * 2);
-                    ctx.stroke();
-                }
-            }
-            
-            jump() {
-                if (!this.isJumping) {
-                    this.velocityY = -this.jumpPower;
-                    this.isJumping = true;
-                }
-            }
-            
-            resetPosition() {
-                this.x = this.checkpointX;
-                this.y = this.checkpointY;
-                this.velocityY = 0;
-                this.velocityX = 0;
-                this.invulnerable = true;
-                this.invulnerableTimer = 180; // 3 seconds
-                showPowerUpIndicator("Kebal aktif 3s", 180);
-            }
-            
-            setStartPosition(x, y) {
-                this.startX = x;
-                this.startY = y;
-                this.x = x;
-                this.y = y;
-                this.checkpointX = x;
-                this.checkpointY = y;
-            }
-            
-            updateCheckpoint(x, y) {
-                this.checkpointX = x;
-                this.checkpointY = y;
-                showCheckpointIndicator();
-            }
-            
-            collectCoin() {
-                this.score += 10;
-                document.getElementById('score').textContent = this.score;
-            }
-            
-            takeDamage() {
-                if (!this.invulnerable) {
-                    this.lives--;
-                    document.getElementById('lives').textContent = this.lives;
-                    this.resetPosition(); // Respawn at checkpoint immediately
-                    this.invulnerable = true;
-                    this.invulnerableTimer = 180; // 3 seconds
-                    showPowerUpIndicator("Kebal aktif 3s", 180);
-                }
-            }
-            
-            addLife() {
-                this.lives++;
-                document.getElementById('lives').textContent = this.lives;
-            }
-            
-            activateInvincibility() {
-                this.invulnerable = true;
-                this.invulnerableTimer = 180; // 3 seconds
-                showPowerUpIndicator("Kebal aktif 3s", 180);
-            }
+      // Game variables
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      const gameContainer = document.getElementById("gameContainer");
+
+      // Game state
+      let gameState = "menu"; // menu, playing, gameOver, levelComplete, gameWin
+      let currentLevel = 1;
+      let deathsThisLevel = 0;
+
+      // Camera system
+      const camera = {
+        x: 0,
+        y: 0,
+        width: canvas.width,
+        height: canvas.height,
+        lerpFactor: 0.1,
+      };
+
+      // Player class
+      class Player {
+        constructor(x, y, color, controls) {
+          this.x = x;
+          this.y = y;
+          this.width = 30;
+          this.height = 50;
+          this.velocityX = 0;
+          this.velocityY = 0;
+          this.speed = 5;
+          this.jumpPower = 12;
+          this.color = color;
+          this.lives = 3;
+          this.score = 0;
+          this.controls = controls;
+          this.isJumping = false;
+          this.invulnerable = false;
+          this.invulnerableTimer = 0;
+          this.direction = 1; // 1 = right, -1 = left
+          this.animationFrame = 0;
+          this.animationSpeed = 0.2;
+          this.startX = x;
+          this.startY = y;
+          this.checkpointX = x;
+          this.checkpointY = y;
         }
-        
-        // Ground obstacle class (all obstacles are on ground level)
-        class GroundObstacle {
-            constructor(x, width, type = "normal", speed = 0, range = 0) {
-                this.x = x;
-                this.width = width;
-                this.type = type; // normal, pit, spike, lava, moving
-                this.speed = speed;
-                this.range = range;
-                this.startX = x;
-                this.direction = 1;
-                this.y = canvas.height - 40; // Ground level
-                this.height = 40;
+
+        update() {
+          // Apply gravity
+          this.velocityY += 0.5;
+          this.x += this.velocityX;
+          this.y += this.velocityY;
+
+          // Friction
+          this.velocityX *= 0.9;
+
+          // Screen boundaries (left)
+          if (this.x < 0) {
+            this.x = 0;
+            this.velocityX = 0;
+          }
+
+          // Check if fallen off screen
+          if (this.y > canvas.height) {
+            this.lives--;
+            document.getElementById("lives").textContent = this.lives;
+            this.resetPosition();
+          }
+
+          // Invulnerability
+          if (this.invulnerable) {
+            this.invulnerableTimer--;
+            if (this.invulnerableTimer <= 0) {
+              this.invulnerable = false;
             }
-            
-            update() {
-                if (this.type === "moving") {
-                    this.x += this.speed * this.direction;
-                    
-                    if (this.x > this.startX + this.range) {
-                        this.direction = -1;
-                    } else if (this.x < this.startX) {
-                        this.direction = 1;
-                    }
-                }
-            }
-            
-            draw() {
-                switch(this.type) {
-                    case "normal":
-                        // Only draw grass top
-                        ctx.fillStyle = '#567D46';
-                        ctx.fillRect(this.x - camera.x, this.y, this.width, 10);
-                        break;
-                    case "pit":
-                        // Draw pit (empty space)
-                        // Add some depth effect
-                        ctx.fillStyle = '#2E2E2E';
-                        for (let i = 0; i < this.width; i += 10) {
-                            ctx.fillRect(this.x - camera.x + i, this.y, 5, 20);
-                        }
-                        break;
-                    case "spike":
-                        ctx.fillStyle = '#567D46';
-                        ctx.fillRect(this.x - camera.x, this.y, this.width, 10);
-                        
-                        // Spikes
-                        ctx.fillStyle = '#FF0000';
-                        for (let i = 0; i < this.width; i += 20) {
-                            ctx.beginPath();
-                            ctx.moveTo(this.x - camera.x + i, this.y);
-                            ctx.lineTo(this.x - camera.x + i + 10, this.y - 15);
-                            ctx.lineTo(this.x - camera.x + i + 20, this.y);
-                            ctx.closePath();
-                            ctx.fill();
-                        }
-                        break;
-                    case "lava":
-                        ctx.fillStyle = '#567D46';
-                        ctx.fillRect(this.x - camera.x, this.y, this.width, 10);
-                        
-                        // Lava
-                        ctx.fillStyle = '#FF4500';
-                        ctx.fillRect(this.x - camera.x, this.y, this.width, 15);
-                        
-                        // Animated lava effect
-                        for (let i = 0; i < this.width; i += 30) {
-                            const wave = Math.sin((Date.now() / 200) + i) * 5;
-                            ctx.fillStyle = i % 2 === 0 ? '#FF8C00' : '#FF4500';
-                            ctx.beginPath();
-                            ctx.arc(this.x - camera.x + i, this.y + 7 + wave, 5, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                        break;
-                    case "moving":
-                        ctx.fillStyle = '#8B4513';
-                        ctx.fillRect(this.x - camera.x, this.y, this.width, this.height);
-                        
-                        // Grass top
-                        ctx.fillStyle = '#567D46';
-                        ctx.fillRect(this.x - camera.x, this.y, this.width, 10);
-                        
-                        // Moving platform indicator
-                        ctx.fillStyle = '#FFD700';
-                        ctx.fillRect(this.x - camera.x + 10, this.y - 5, this.width - 20, 5);
-                        break;
-                }
-            }
+          }
+
+          // Animation
+          this.animationFrame += this.animationSpeed * Math.abs(this.velocityX);
+          if (this.animationFrame >= 4) this.animationFrame = 0;
         }
-        
-        // Coin class
-        class Coin {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.width = 20;
-                this.height = 20;
-                this.collected = false;
-                this.animation = 0;
-            }
-            
-            draw() {
-                if (this.collected) return;
-                
-                this.animation += 0.1;
-                const yOff = Math.sin(this.animation) * 5;
-                
-                ctx.fillStyle = '#FFD700';
-                ctx.beginPath();
-                ctx.arc(this.x - camera.x + 10, this.y + 10 + yOff, 10, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Coin details
-                ctx.fillStyle = '#DAA520';
-                ctx.beginPath();
-                ctx.arc(this.x - camera.x + 10, this.y + 10 + yOff, 7, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
-            collect() {
-                this.collected = true;
-                return 10;
-            }
-        }
-        
-        // Enemy class with improved ground-based AI
-        class Enemy {
-            constructor(x, y, width, height, type = "patrol", speed = 1.5, range = 100, chaseRange = 200) {
-                this.x = x;
-                this.y = y;
-                this.width = width;
-                this.height = height;
-                this.type = type; // patrol, chase, random
-                this.speed = speed;
-                this.range = range;
-                this.chaseRange = chaseRange;
-                this.startX = x;
-                this.direction = 1;
-                this.animation = 0;
-                this.patrolTimer = 0;
-                this.patrolDirection = 1;
-                this.groundY = y; // Store ground level
-            }
-            
-            update(player) {
-                this.animation += 0.1;
-                
-                switch(this.type) {
-                    case "patrol":
-                        // Standard patrol with occasional pauses
-                        this.patrolTimer++;
-                        if (this.patrolTimer > 120) { // Pause for a bit
-                            if (this.patrolTimer > 180) {
-                                this.patrolTimer = 0;
-                                this.direction *= -1;
-                            }
-                        } else {
-                            this.x += this.speed * this.direction;
-                            
-                            if (this.x > this.startX + this.range) {
-                                this.direction = -1;
-                            } else if (this.x < this.startX) {
-                                this.direction = 1;
-                            }
-                        }
-                        break;
-                        
-                    case "chase":
-                        // Chase player when in range, otherwise patrol
-                        const distanceToPlayer = Math.abs(this.x - player.x);
-                        
-                        if (distanceToPlayer < this.chaseRange) {
-                            // Chase player
-                            if (this.x < player.x) {
-                                this.x += this.speed;
-                            } else {
-                                this.x -= this.speed;
-                            }
-                        } else {
-                            // Patrol normally
-                            this.x += this.speed * this.direction;
-                            
-                            if (this.x > this.startX + this.range) {
-                                this.direction = -1;
-                            } else if (this.x < this.startX) {
-                                this.direction = 1;
-                            }
-                        }
-                        break;
-                        
-                    case "random":
-                        // Random movement with direction changes
-                        this.patrolTimer++;
-                        
-                        if (this.patrolTimer > 60) {
-                            this.patrolDirection = Math.random() > 0.5 ? 1 : -1;
-                            this.patrolTimer = 0;
-                        }
-                        
-                        this.x += this.speed * this.patrolDirection;
-                        
-                        // Stay within range
-                        if (this.x > this.startX + this.range) {
-                            this.x = this.startX + this.range;
-                            this.patrolDirection = -1;
-                        } else if (this.x < this.startX) {
-                            this.x = this.startX;
-                            this.patrolDirection = 1;
-                        }
-                        break;
-                }
-            }
-            
-            draw() {
-                // Body
-                ctx.fillStyle = '#FF0000';
-                ctx.fillRect(this.x - camera.x, this.y, this.width, this.height);
-                
-                // Eyes
-                const eyeOffset = Math.sin(this.animation) * 2;
-                ctx.fillStyle = 'white';
-                ctx.fillRect(this.x - camera.x + 5, this.y + 8 + eyeOffset, 5, 5);
-                ctx.fillRect(this.x - camera.x + this.width - 10, this.y + 8 + eyeOffset, 5, 5);
-                
-                // Angry eyebrows
-                ctx.strokeStyle = 'black';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(this.x - camera.x + 3, this.y + 5 + eyeOffset);
-                ctx.lineTo(this.x - camera.x + 8, this.y + 3 + eyeOffset);
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.moveTo(this.x - camera.x + this.width - 8, this.y + 3 + eyeOffset);
-                ctx.lineTo(this.x - camera.x + this.width - 3, this.y + 5 + eyeOffset);
-                ctx.stroke();
-            }
-        }
-        
-        // Power-up class
-        class PowerUp {
-            constructor(x, y, type) {
-                this.x = x;
-                this.y = y;
-                this.width = 25;
-                this.height = 25;
-                this.type = type; // life, invincibility
-                this.collected = false;
-                this.animation = 0;
-            }
-            
-            draw() {
-                if (this.collected) return;
-                
-                this.animation += 0.1;
-                const yOff = Math.sin(this.animation) * 5;
-                
-                switch(this.type) {
-                    case "life":
-                        ctx.fillStyle = '#FF0000';
-                        ctx.beginPath();
-                        ctx.moveTo(this.x - camera.x + 12, this.y + 5 + yOff);
-                        ctx.lineTo(this.x - camera.x + 5, this.y + 12 + yOff);
-                        ctx.lineTo(this.x - camera.x + 12, this.y + 20 + yOff);
-                        ctx.lineTo(this.x - camera.x + 19, this.y + 12 + yOff);
-                        ctx.closePath();
-                        ctx.fill();
-                        break;
-                    case "invincibility":
-                        ctx.fillStyle = '#00FFFF';
-                        ctx.beginPath();
-                        ctx.arc(this.x - camera.x + 12, this.y + 12 + yOff, 12, 0, Math.PI * 2);
-                        ctx.fill();
-                        
-                        // Star effect
-                        ctx.fillStyle = '#FFFFFF';
-                        ctx.beginPath();
-                        ctx.arc(this.x - camera.x + 12, this.y + 12 + yOff, 5, 0, Math.PI * 2);
-                        ctx.fill();
-                        break;
-                }
-            }
-            
-            collect(player) {
-                this.collected = true;
-                switch(this.type) {
-                    case "life":
-                        player.addLife();
-                        showPowerUpIndicator("+1 Nyawa", 120);
-                        break;
-                    case "invincibility":
-                        player.activateInvincibility();
-                        break;
-                }
-            }
-        }
-        
-        // Checkpoint class
-        class Checkpoint {
-            constructor(x) {
-                this.x = x;
-                this.width = 30;
-                this.height = 50;
-                this.activated = false;
-                this.animation = 0;
-                this.y = canvas.height - 90;
-            }
-            
-            draw() {
-                // Flag pole
-                ctx.fillStyle = '#8B4513';
-                ctx.fillRect(this.x - camera.x + 13, this.y, 4, 40);
-                
-                // Flag - changes color when activated
-                this.animation += 0.05;
-                const wave = Math.sin(this.animation) * 3;
-                const color = this.activated ? '#00FF00' : '#FF0000';
-                
-                ctx.fillStyle = color;
-                ctx.beginPath();
-                ctx.moveTo(this.x - camera.x, this.y + 10);
-                ctx.lineTo(this.x - camera.x + 20, this.y + 5 + wave);
-                ctx.lineTo(this.x - camera.x, this.y + 1 + wave * 2);
-                ctx.lineTo(this.x - camera.x + 20, this.y - 3 + wave);
-                ctx.closePath();
-                ctx.fill();
-            }
-            
-            activate() {
-                this.activated = true;
-                this.animation = 0;
-            }
-        }
-        
-        // Flag class (finish line)
-        class Flag {
-            constructor(x) {
-                this.x = x;
-                this.width = 30;
-                this.height = 50;
-                this.poleHeight = 40;
-                this.animation = 0;
-                this.reached = false;
-                this.y = canvas.height - 90;
-            }
-            
-            draw() {
-                if (this.reached) return;
-                
-                // Flag pole
-                ctx.fillStyle = '#8B4513';
-                ctx.fillRect(this.x - camera.x + 13, this.y, 4, this.poleHeight);
-                
-                // Flag
-                this.animation += 0.05;
-                const wave = Math.sin(this.animation) * 3;
-                
-                ctx.fillStyle = '#FFD700'; // Gold color for final flag
-                ctx.beginPath();
-                ctx.moveTo(this.x - camera.x, this.y + 10);
-                ctx.lineTo(this.x - camera.x + 20, this.y + 5 + wave);
-                ctx.lineTo(this.x - camera.x, this.y + 1 + wave * 2);
-                ctx.lineTo(this.x - camera.x + 20, this.y - 3 + wave);
-                ctx.closePath();
-                ctx.fill();
-            }
-        }
-        
-        // Particle class for effects
-        class Particle {
-            constructor(x, y, color) {
-                this.x = x;
-                this.y = y;
-                this.size = Math.random() * 5 + 2;
-                this.speedX = Math.random() * 3 - 1.5;
-                this.speedY = Math.random() * 3 - 1.5;
-                this.color = color;
-                this.life = 30;
-            }
-            
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.life--;
-                this.size *= 0.95;
-            }
-            
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x - camera.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-        
-        // Game objects
-        let player;
-        let groundObstacles = [];
-        let coins = [];
-        let enemies = [];
-        let powerUps = [];
-        let checkpoints = [];
-        let flag;
-        let particles = [];
-        
-        // Input handling
-        const keys = {};
-        let touchControls = {
-            left: false,
-            right: false,
-            jump: false
-        };
-        
-        // Initialize game
-        function initGame() {
-            // Reset death counter
-            deathsThisLevel = 0;
-            document.getElementById('deathCount').textContent = deathsThisLevel;
-            
-            // Create player
-            player = new Player(100, canvas.height - 90, '#FF4444', {
-                left: 'a',
-                right: 'd',
-                jump: 'w'
-            });
-            
-            // Set start position
-            player.setStartPosition(100, canvas.height - 90);
-            
-            // Generate level
-            generateLevel(currentLevel);
-            
-            // Reset UI
-            document.getElementById('score').textContent = player.score;
-            document.getElementById('lives').textContent = player.lives;
-            document.getElementById('currentLevel').textContent = currentLevel;
-            document.getElementById('completedLevel').textContent = currentLevel;
-            
-            // Reset camera
-            camera.x = 0;
-        }
-        
-        // Update camera to follow player
-        function updateCamera() {
-            // Keep player in the left 2/3 of the screen
-            const targetX = player.x - camera.width * 0.3;
-            
-            // Smooth camera movement
-            camera.x += (targetX - camera.x) * camera.lerpFactor;
-            
-            // Don't scroll past left edge
-            camera.x = Math.max(0, camera.x);
-            
-            // Don't scroll past right edge (level width)
-            const levelWidth = getLevelWidth(currentLevel);
-            camera.x = Math.min(camera.x, levelWidth - camera.width);
-        }
-        
-        // Get level width based on current level
-        function getLevelWidth(level) {
-            // Return appropriate width for each level
-            switch(level) {
-                case 1: return 3000;
-                case 2: return 3500;
-                case 3: return 4000;
-                case 4: return 4500;
-                case 5: return 5000;
-                default: return 3000;
-            }
-        }
-        
-        // Generate level based on current level
-        function generateLevel(level) {
-            groundObstacles = [];
-            coins = [];
-            enemies = [];
-            powerUps = [];
-            checkpoints = [];
-            
-            // Base ground - continuous but with gaps and hazards
-            const levelWidth = getLevelWidth(level);
-            const groundY = canvas.height - 40; // Ground level
-            
-            // Level 1 design - ground-based obstacles only
-            if (level === 1) {
-                // Continuous ground segments
-                groundObstacles.push(new GroundObstacle(0, 400, "normal"));
-                groundObstacles.push(new GroundObstacle(600, 400, "normal"));
-                groundObstacles.push(new GroundObstacle(1200, 400, "normal"));
-                groundObstacles.push(new GroundObstacle(1800, 400, "normal"));
-                groundObstacles.push(new GroundObstacle(2400, 600, "normal"));
-                
-                // Lava sections
-                groundObstacles.push(new GroundObstacle(1000, 200, "lava"));
-                
-                // Spike sections
-                groundObstacles.push(new GroundObstacle(1600, 200, "spike"));
-                
-                // Moving platform
-                groundObstacles.push(new GroundObstacle(2200, 150, "moving", 1.5, 200));
-                
-                // Coins - placed just above ground level
-                for (let i = 0; i < 15; i++) {
-                    coins.push(new Coin(200 + i * 150, canvas.height - 70));
-                }
-                coins.push(new Coin(1100, canvas.height - 90));
-                coins.push(new Coin(1700, canvas.height - 90));
-                coins.push(new Coin(2300, canvas.height - 90));
-                
-                // Enemies - fewer enemies, all on ground level
-                enemies.push(new Enemy(500, canvas.height - 90, 30, 20, "patrol", 1.5, 100));
-                enemies.push(new Enemy(1100, canvas.height - 90, 30, 20, "chase", 2, 150, 250));
-                enemies.push(new Enemy(1700, canvas.height - 90, 30, 20, "random", 1.8, 120));
-                
-                // Power-ups
-                powerUps.push(new PowerUp(800, canvas.height - 70, "invincibility"));
-                powerUps.push(new PowerUp(1400, canvas.height - 70, "life"));
-                
-                // Checkpoints - placed in safe areas
-                checkpoints.push(new Checkpoint(400)); // After first platform segment
-                checkpoints.push(new Checkpoint(1000)); // After lava section
-                checkpoints.push(new Checkpoint(1600)); // After spike section
-                checkpoints.push(new Checkpoint(2200)); // Before moving platform
-                
-                // Flag
-                flag = new Flag(2800);
-            } 
-            // Level 2 design
-            else if (level === 2) {
-                // Ground segments with more gaps
-                groundObstacles.push(new GroundObstacle(0, 300, "normal"));
-                groundObstacles.push(new GroundObstacle(500, 300, "normal"));
-                groundObstacles.push(new GroundObstacle(900, 300, "normal"));
-                groundObstacles.push(new GroundObstacle(1300, 300, "normal"));
-                groundObstacles.push(new GroundObstacle(1700, 300, "normal"));
-                groundObstacles.push(new GroundObstacle(2100, 300, "normal"));
-                groundObstacles.push(new GroundObstacle(2500, 1000, "normal"));
-                
-                // Lava sections
-                groundObstacles.push(new GroundObstacle(700, 150, "lava"));
-                groundObstacles.push(new GroundObstacle(1500, 200, "lava"));
-                groundObstacles.push(new GroundObstacle(2300, 250, "lava"));
-                
-                // Spike sections
-                groundObstacles.push(new GroundObstacle(1100, 150, "spike"));
-                groundObstacles.push(new GroundObstacle(1900, 200, "spike"));
-                
-                // Moving platforms
-                groundObstacles.push(new GroundObstacle(2700, 150, "moving", 2, 300));
-                groundObstacles.push(new GroundObstacle(3100, 100, "moving", 1.5, 200));
-                
-                // Coins - placed just above ground level
-                for (let i = 0; i < 20; i++) {
-                    coins.push(new Coin(150 + i * 120, canvas.height - 70));
-                }
-                for (let i = 0; i < 5; i++) {
-                    coins.push(new Coin(750 + i * 400, canvas.height - 90));
-                }
-                
-                // Fewer enemies with more space
-                enemies.push(new Enemy(400, canvas.height - 90, 30, 20, "patrol", 1.2, 80));
-                enemies.push(new Enemy(800, canvas.height - 90, 30, 20, "chase", 1.7, 120, 220));
-                enemies.push(new Enemy(1600, canvas.height - 90, 30, 20, "random", 1.4, 100));
-                enemies.push(new Enemy(2600, canvas.height - 90, 30, 20, "patrol", 1.9, 90));
-                
-                // Power-ups
-                powerUps.push(new PowerUp(600, canvas.height - 70, "invincibility"));
-                powerUps.push(new PowerUp(1000, canvas.height - 70, "life"));
-                powerUps.push(new PowerUp(1400, canvas.height - 70, "invincibility"));
-                powerUps.push(new PowerUp(1800, canvas.height - 70, "life"));
-                powerUps.push(new PowerUp(2200, canvas.height - 70, "invincibility"));
-                powerUps.push(new PowerUp(2600, canvas.height - 70, "life"));
-                
-                // Checkpoints - placed in safe areas
-                checkpoints.push(new Checkpoint(300)); // After first segment
-                checkpoints.push(new Checkpoint(700)); // Before lava section
-                checkpoints.push(new Checkpoint(1100)); // Before spike section
-                checkpoints.push(new Checkpoint(1500)); // After lava section
-                checkpoints.push(new Checkpoint(1900)); // After spike section
-                checkpoints.push(new Checkpoint(2300)); // Before moving platforms
-                checkpoints.push(new Checkpoint(2700)); // After first moving platform
-                
-                // Flag
-                flag = new Flag(3800);
-            }
-            // Level 3 design
-            else if (level === 3) {
-                // More complex ground layout with alternating obstacles
-                groundObstacles.push(new GroundObstacle(0, 250, "normal"));
-                groundObstacles.push(new GroundObstacle(450, 250, "normal"));
-                groundObstacles.push(new GroundObstacle(850, 250, "normal"));
-                groundObstacles.push(new GroundObstacle(1250, 250, "normal"));
-                groundObstacles.push(new GroundObstacle(1650, 250, "normal"));
-                groundObstacles.push(new GroundObstacle(2050, 250, "normal"));
-                groundObstacles.push(new GroundObstacle(2450, 250, "normal"));
-                groundObstacles.push(new GroundObstacle(2850, 1150, "normal"));
-                
-                // Lava sections
-                groundObstacles.push(new GroundObstacle(650, 200, "lava"));
-                groundObstacles.push(new GroundObstacle(1450, 200, "lava"));
-                groundObstacles.push(new GroundObstacle(2250, 200, "lava"));
-                groundObstacles.push(new GroundObstacle(3050, 300, "lava"));
-                
-                // Spike sections
-                groundObstacles.push(new GroundObstacle(1050, 200, "spike"));
-                groundObstacles.push(new GroundObstacle(1850, 200, "spike"));
-                groundObstacles.push(new GroundObstacle(2650, 200, "spike"));
-                
-                // Moving platforms
-                groundObstacles.push(new GroundObstacle(3250, 150, "moving", 2.5, 400));
-                groundObstacles.push(new GroundObstacle(3650, 100, "moving", 2, 300));
-                groundObstacles.push(new GroundObstacle(4050, 150, "moving", 1.5, 200));
-                
-                // Coins - placed just above ground level
-                for (let i = 0; i < 25; i++) {
-                    coins.push(new Coin(125 + i * 100, canvas.height - 70));
-                }
-                for (let i = 0; i < 8; i++) {
-                    coins.push(new Coin(675 + i * 400, canvas.height - 90));
-                }
-                
-                // Fewer enemies with strategic placement
-                enemies.push(new Enemy(350, canvas.height - 90, 30, 20, "patrol", 1.3, 50));
-                enemies.push(new Enemy(750, canvas.height - 90, 30, 20, "chase", 1.9, 150, 250));
-                enemies.push(new Enemy(1250, canvas.height - 90, 30, 20, "random", 1.6, 120));
-                enemies.push(new Enemy(1650, canvas.height - 90, 30, 20, "patrol", 2.0, 80));
-                enemies.push(new Enemy(2050, canvas.height - 90, 30, 20, "chase", 2.3, 180, 220));
-                enemies.push(new Enemy(2850, canvas.height - 90, 30, 20, "patrol", 2.6, 100));
-                
-                // Power-ups
-                for (let i = 0; i < 8; i++) {
-                    powerUps.push(new PowerUp(450 + i * 500, canvas.height - 70, i % 2 === 0 ? "invincibility" : "life"));
-                }
-                
-                // Checkpoints - placed in safe areas, well before obstacles
-                checkpoints.push(new Checkpoint(250)); // After first segment
-                checkpoints.push(new Checkpoint(650)); // Before first lava
-                checkpoints.push(new Checkpoint(1050)); // Before first spike
-                checkpoints.push(new Checkpoint(1450)); // Before second lava
-                checkpoints.push(new Checkpoint(1850)); // Before second spike
-                checkpoints.push(new Checkpoint(2250)); // Before third lava
-                checkpoints.push(new Checkpoint(2650)); // Before third spike
-                checkpoints.push(new Checkpoint(3050)); // Before moving platforms
-                
-                // Flag
-                flag = new Flag(4200);
-            }
-            // Level 4 design
-            else if (level === 4) {
-                // Challenging ground layout with narrow passages
-                groundObstacles.push(new GroundObstacle(0, 200, "normal"));
-                groundObstacles.push(new GroundObstacle(400, 200, "normal"));
-                groundObstacles.push(new GroundObstacle(800, 200, "normal"));
-                groundObstacles.push(new GroundObstacle(1200, 200, "normal"));
-                groundObstacles.push(new GroundObstacle(1600, 200, "normal"));
-                groundObstacles.push(new GroundObstacle(2000, 200, "normal"));
-                groundObstacles.push(new GroundObstacle(2400, 200, "normal"));
-                groundObstacles.push(new GroundObstacle(2800, 200, "normal"));
-                groundObstacles.push(new GroundObstacle(3200, 1800, "normal"));
-                
-                // Lava sections (wider and more frequent)
-                groundObstacles.push(new GroundObstacle(600, 200, "lava"));
-                groundObstacles.push(new GroundObstacle(1000, 250, "lava"));
-                groundObstacles.push(new GroundObstacle(1400, 300, "lava"));
-                groundObstacles.push(new GroundObstacle(1800, 350, "lava"));
-                groundObstacles.push(new GroundObstacle(2200, 400, "lava"));
-                groundObstacles.push(new GroundObstacle(2600, 450, "lava"));
-                groundObstacles.push(new GroundObstacle(3000, 500, "lava"));
-                groundObstacles.push(new GroundObstacle(3600, 600, "lava"));
-                
-                // Spike sections
-                groundObstacles.push(new GroundObstacle(3400, 200, "spike"));
-                groundObstacles.push(new GroundObstacle(4000, 250, "spike"));
-                
-                // Moving platforms (faster and with wider range)
-                groundObstacles.push(new GroundObstacle(3800, 150, "moving", 3, 500));
-                groundObstacles.push(new GroundObstacle(4200, 100, "moving", 2.5, 400));
-                groundObstacles.push(new GroundObstacle(4600, 150, "moving", 2, 300));
-                
-                // Coins - placed just above ground level
-                for (let i = 0; i < 30; i++) {
-                    coins.push(new Coin(100 + i * 80, canvas.height - 70));
-                }
-                for (let i = 0; i < 10; i++) {
-                    coins.push(new Coin(600 + i * 400, canvas.height - 90));
-                }
-                
-                // Even fewer enemies with more strategic placement
-                enemies.push(new Enemy(300, canvas.height - 90, 30, 20, "patrol", 1.5, 50));
-                enemies.push(new Enemy(700, canvas.height - 90, 30, 20, "chase", 2.0, 150, 250));
-                enemies.push(new Enemy(1500, canvas.height - 90, 30, 20, "random", 1.7, 120));
-                enemies.push(new Enemy(2300, canvas.height - 90, 30, 20, "patrol", 2.2, 80));
-                enemies.push(new Enemy(3100, canvas.height - 90, 30, 20, "chase", 2.5, 180, 220));
-                enemies.push(new Enemy(3900, canvas.height - 90, 30, 20, "patrol", 2.8, 100));
-                
-                // Power-ups (more frequent but harder to reach)
-                for (let i = 0; i < 10; i++) {
-                    powerUps.push(new PowerUp(400 + i * 400, canvas.height - 70, i % 2 === 0 ? "invincibility" : "life"));
-                }
-                
-                // Checkpoints (more frequent for challenging level, but in safe areas)
-                checkpoints.push(new Checkpoint(200)); // After first segment
-                checkpoints.push(new Checkpoint(600)); // Before first lava
-                checkpoints.push(new Checkpoint(1000)); // Before second lava
-                checkpoints.push(new Checkpoint(1400)); // Before third lava
-                checkpoints.push(new Checkpoint(1800)); // Before fourth lava
-                checkpoints.push(new Checkpoint(2200)); // Before fifth lava
-                checkpoints.push(new Checkpoint(2600)); // Before sixth lava
-                checkpoints.push(new Checkpoint(3000)); // Before seventh lava
-                checkpoints.push(new Checkpoint(3400)); // Before spike section
-                
-                // Flag
-                flag = new Flag(4800);
-            }
-            // Level 5 design - final level
-            else if (level === 5) {
-                // Most challenging ground layout with precise jumps required
-                groundObstacles.push(new GroundObstacle(0, 150, "normal"));
-                groundObstacles.push(new GroundObstacle(350, 150, "normal"));
-                groundObstacles.push(new GroundObstacle(700, 150, "normal"));
-                groundObstacles.push(new GroundObstacle(1050, 150, "normal"));
-                groundObstacles.push(new GroundObstacle(1400, 150, "normal"));
-                groundObstacles.push(new GroundObstacle(1750, 150, "normal"));
-                groundObstacles.push(new GroundObstacle(2100, 150, "normal"));
-                groundObstacles.push(new GroundObstacle(2450, 150, "normal"));
-                groundObstacles.push(new GroundObstacle(2800, 150, "normal"));
-                groundObstacles.push(new GroundObstacle(3150, 3850, "normal"));
-                
-                // Lava sections (very wide and frequent)
-                groundObstacles.push(new GroundObstacle(500, 200, "lava"));
-                groundObstacles.push(new GroundObstacle(850, 250, "lava"));
-                groundObstacles.push(new GroundObstacle(1200, 300, "lava"));
-                groundObstacles.push(new GroundObstacle(1550, 350, "lava"));
-                groundObstacles.push(new GroundObstacle(1900, 400, "lava"));
-                groundObstacles.push(new GroundObstacle(2250, 450, "lava"));
-                groundObstacles.push(new GroundObstacle(2600, 500, "lava"));
-                groundObstacles.push(new GroundObstacle(2950, 550, "lava"));
-                groundObstacles.push(new GroundObstacle(3300, 600, "lava"));
-                groundObstacles.push(new GroundObstacle(3700, 700, "lava"));
-                groundObstacles.push(new GroundObstacle(4100, 800, "lava"));
-                
-                // Spike sections (strategically placed)
-                groundObstacles.push(new GroundObstacle(3500, 250, "spike"));
-                groundObstacles.push(new GroundObstacle(4300, 300, "spike"));
-                groundObstacles.push(new GroundObstacle(4700, 350, "spike"));
-                
-                // Moving platforms (fast and with wide range)
-                groundObstacles.push(new GroundObstacle(3900, 150, "moving", 3.5, 600));
-                groundObstacles.push(new GroundObstacle(4500, 100, "moving", 3, 500));
-                groundObstacles.push(new GroundObstacle(5000, 150, "moving", 2.5, 400));
-                
-                // Coins (tricky placement requiring precise jumps)
-                for (let i = 0; i < 35; i++) {
-                    coins.push(new Coin(75 + i * 70, canvas.height - 70));
-                }
-                for (let i = 0; i < 15; i++) {
-                    coins.push(new Coin(500 + i * 350, canvas.height - 90));
-                }
-                
-                // Minimal enemies with strategic placement
-                enemies.push(new Enemy(250, canvas.height - 90, 30, 20, "patrol", 1.8, 40));
-                enemies.push(new Enemy(650, canvas.height - 90, 30, 20, "chase", 2.3, 150, 250));
-                enemies.push(new Enemy(1450, canvas.height - 90, 30, 20, "random", 1.9, 120));
-                enemies.push(new Enemy(2250, canvas.height - 90, 30, 20, "patrol", 2.6, 80));
-                enemies.push(new Enemy(3050, canvas.height - 90, 30, 20, "chase", 2.9, 180, 220));
-                enemies.push(new Enemy(3850, canvas.height - 90, 30, 20, "patrol", 3.2, 100));
-                
-                // Power-ups (strategically placed for help)
-                for (let i = 0; i < 12; i++) {
-                    powerUps.push(new PowerUp(350 + i * 350, canvas.height - 70, i % 2 === 0 ? "invincibility" : "life"));
-                }
-                
-                // Checkpoints (frequent for very challenging level, but in safe areas)
-                checkpoints.push(new Checkpoint(150)); // After first segment
-                checkpoints.push(new Checkpoint(350)); // Before first lava
-                checkpoints.push(new Checkpoint(700)); // Before second lava
-                checkpoints.push(new Checkpoint(1050)); // Before third lava
-                checkpoints.push(new Checkpoint(1400)); // Before fourth lava
-                checkpoints.push(new Checkpoint(1750)); // Before fifth lava
-                checkpoints.push(new Checkpoint(2100)); // Before sixth lava
-                checkpoints.push(new Checkpoint(2450)); // Before seventh lava
-                checkpoints.push(new Checkpoint(2800)); // Before eighth lava
-                checkpoints.push(new Checkpoint(3150)); // Before ninth lava
-                checkpoints.push(new Checkpoint(3500)); // Before tenth lava
-                
-                // Flag
-                flag = new Flag(4900);
-            }
-        }
-        
-        // Check collision between player and ground obstacle
-        function checkGroundCollision(player, obstacle) {
-            // Check if player is above the obstacle (only for normal ground)
-            if (obstacle.type === "normal" && player.velocityY > 0 &&
-                player.y + player.height - player.velocityY <= obstacle.y &&
-                player.y + player.height > obstacle.y &&
-                player.x < obstacle.x + obstacle.width &&
-                player.x + player.width > obstacle.x) {
-                
-                player.y = obstacle.y - player.height;
-                player.velocityY = 0;
-                player.isJumping = false;
-                return true;
-            }
-            
-            // Check horizontal collision
-            if (player.velocityY <= 0) {
-                // Left side collision
-                if (player.velocityX > 0 &&
-                    player.x + player.width - player.velocityX <= obstacle.x &&
-                    player.x + player.width > obstacle.x &&
-                    player.y < obstacle.y + obstacle.height &&
-                    player.y + player.height > obstacle.y) {
-                    player.x = obstacle.x - player.width;
-                    player.velocityX = 0;
-                }
-                // Right side collision
-                else if (player.velocityX < 0 &&
-                    player.x - player.velocityX >= obstacle.x + obstacle.width &&
-                    player.x < obstacle.x + obstacle.width &&
-                    player.y < obstacle.y + obstacle.height &&
-                    player.y + player.height > obstacle.y) {
-                    player.x = obstacle.x + obstacle.width;
-                    player.velocityX = 0;
-                }
-            }
-            
-            // Check if player is on a moving platform
-            if (obstacle.type === "moving" && 
-                player.y + player.height <= obstacle.y + 5 &&
-                player.y + player.height >= obstacle.y - 5 &&
-                player.x < obstacle.x + obstacle.width &&
-                player.x + player.width > obstacle.x) {
-                
-                player.x += obstacle.speed * obstacle.direction;
-            }
-            
-            // Check if player is in a hazard area
-            if ((obstacle.type === "spike" || obstacle.type === "lava") &&
-                player.x < obstacle.x + obstacle.width &&
-                player.x + player.width > obstacle.x &&
-                player.y < obstacle.y + obstacle.height &&
-                player.y + player.height > obstacle.y) {
-                
-                player.takeDamage();
-            }
-            
-            return false;
-        }
-        
-        // Check if player is over a pit
-        function checkPitCollision(player, obstacles) {
-            let overPit = true;
-            
-            // Check if there's ground under the player
-            for (const obstacle of obstacles) {
-                if (obstacle.type === "normal" || obstacle.type === "moving") {
-                    if (player.x + player.width/2 > obstacle.x && 
-                        player.x + player.width/2 < obstacle.x + obstacle.width &&
-                        player.y + player.height >= obstacle.y) {
-                        overPit = false;
-                        break;
-                    }
-                }
-            }
-            
-            return overPit;
-        }
-        
-        // Check collision between player and object
-        function checkCollision(player, obj) {
-            return player.x < obj.x + obj.width &&
-                   player.x + player.width > obj.x &&
-                   player.y < obj.y + obj.height &&
-                   player.y + player.height > obj.y;
-        }
-        
-        // Create particle effect
-        function createParticles(x, y, color, count) {
-            for (let i = 0; i < count; i++) {
-                particles.push(new Particle(x, y, color));
-            }
-        }
-        
-        // Show power-up indicator
-        function showPowerUpIndicator(text, duration) {
-            const indicator = document.getElementById('powerUpIndicator');
-            indicator.textContent = text;
-            indicator.style.display = 'block';
-            
-            setTimeout(() => {
-                indicator.style.display = 'none';
-            }, duration * (1000 / 60)); // Convert frames to ms
-        }
-        
-        // Show checkpoint indicator
-        function showCheckpointIndicator() {
-            const indicator = document.getElementById('checkpointIndicator');
-            indicator.style.display = 'block';
-            
-            setTimeout(() => {
-                indicator.style.display = 'none';
-            }, 2000);
-        }
-        
-        // Update game state
-        function update() {
-            // Handle player input
-            player.velocityX = 0;
-            if ((keys[player.controls.left] || touchControls.left) && !keys[player.controls.right] && !touchControls.right) {
-                player.velocityX = -player.speed;
-                player.direction = -1;
-            }
-            if ((keys[player.controls.right] || touchControls.right) && !keys[player.controls.left] && !touchControls.left) {
-                player.velocityX = player.speed;
-                player.direction = 1;
-            }
-            if ((keys[player.controls.jump] || touchControls.jump) && !player.isJumping) {
-                player.jump();
-                createParticles(player.x, player.y + player.height, '#888888', 5);
-            }
-            
-            // Update player
-            player.update();
-            
-            // Update camera
-            updateCamera();
-            
-            // Check ground collisions
-            player.isJumping = true;
-            for (const obstacle of groundObstacles) {
-                if (obstacle.type !== "pit") {
-                    checkGroundCollision(player, obstacle);
-                }
-            }
-            
-            // Check if player is over a pit
-            if (checkPitCollision(player, groundObstacles)) {
-                // Player is over a pit, let them fall
-                player.isJumping = true;
-            }
-            
-            // Check coin collection
-            for (const coin of coins) {
-                if (!coin.collected && checkCollision(player, coin)) {
-                    coin.collect();
-                    player.collectCoin();
-                    createParticles(coin.x, coin.y + 10, '#FFD700', 10);
-                }
-            }
-            
-            // Update enemies
-            for (const enemy of enemies) {
-                enemy.update(player);
-                
-                // Check collision with player
-                if (checkCollision(player, enemy) && !player.invulnerable) {
-                    player.takeDamage();
-                    createParticles(player.x + player.width/2, player.y + player.height/2, '#FF0000', 15);
-                }
-            }
-            
-            // Update moving obstacles
-            for (const obstacle of groundObstacles) {
-                if (obstacle.type === "moving") {
-                    obstacle.update();
-                }
-            }
-            
-            // Check checkpoint collisions
-            for (const checkpoint of checkpoints) {
-                if (!checkpoint.activated && checkCollision(player, checkpoint)) {
-                    checkpoint.activate();
-                    player.updateCheckpoint(checkpoint.x, checkpoint.y);
-                }
-            }
-            
-            // Check power-up collection
-            for (const powerUp of powerUps) {
-                if (!powerUp.collected && checkCollision(player, powerUp)) {
-                    powerUp.collect(player);
-                }
-            }
-            
-            // Check flag collision
-            if (flag && !flag.reached && checkCollision(player, flag)) {
-                flag.reached = true;
-                if (currentLevel < 5) {
-                    levelComplete();
-                } else {
-                    gameWin();
-                }
-            }
-            
-            // Check game over (lives <= 0)
-            if (player.lives <= 0) {
-                // Check if we can respawn at checkpoint
-                if (deathsThisLevel < 2) {
-                    deathsThisLevel++;
-                    document.getElementById('deathCount').textContent = deathsThisLevel;
-                    player.resetPosition();
-                    player.lives = 3; // Reset lives for respawn
-                    document.getElementById('lives').textContent = player.lives;
-                } else {
-                    // Game over after 3 deaths
-                    gameOver();
-                }
-            }
-            
-            // Update particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                particles[i].update();
-                if (particles[i].life <= 0) {
-                    particles.splice(i, 1);
-                }
-            }
-        }
-        
-        // Render game
-        function render() {
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw background
-            drawBackground();
-            
-            // Draw ground obstacles
-            for (const obstacle of groundObstacles) {
-                obstacle.draw();
-            }
-            
-            // Draw coins
-            for (const coin of coins) {
-                coin.draw();
-            }
-            
-            // Draw power-ups
-            for (const powerUp of powerUps) {
-                powerUp.draw();
-            }
-            
-            // Draw checkpoints
-            for (const checkpoint of checkpoints) {
-                checkpoint.draw();
-            }
-            
-            // Draw enemies
-            for (const enemy of enemies) {
-                enemy.draw();
-            }
-            
-            // Draw flag
-            if (flag) {
-                flag.draw();
-            }
-            
-            // Draw player
-            player.draw();
-            
-            // Draw particles
-            for (const particle of particles) {
-                particle.draw();
-            }
-        }
-        
-        // Draw background with parallax effect
-        function drawBackground() {
-            // Sky gradient
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, "#87CEEB");
-            gradient.addColorStop(1, "#1E90FF");
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Clouds with parallax effect
-            ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-            drawCloud(50 + (camera.x * 0.1) % (canvas.width + 200), 80, 60);
-            drawCloud(200 + (camera.x * 0.05) % (canvas.width + 300), 50, 80);
-            drawCloud(400 + (camera.x * 0.15) % (canvas.width + 400), 100, 70);
-            drawCloud(600 + (camera.x * 0.08) % (canvas.width + 500), 70, 90);
-            
-            // Ground details (grass)
-            ctx.fillStyle = "#567D46";
-            for (let i = 0; i < canvas.width; i += 50) {
-                ctx.fillRect(i - (camera.x % canvas.width), canvas.height - 40, 20, 5);
-            }
-        }
-        
-        // Draw cloud
-        function drawCloud(x, y, size) {
+
+        draw() {
+          // Draw player
+          ctx.fillStyle = this.invulnerable ? "blue" : this.color;
+          ctx.fillRect(this.x - camera.x, this.y, this.width, this.height);
+
+          // Draw eyes
+          ctx.fillStyle = "white";
+          const eyeX =
+            this.x - camera.x + (this.direction > 0 ? this.width - 8 : 3);
+          ctx.fillRect(eyeX, this.y + 10, 5, 5);
+
+          // Draw animation effect when invulnerable
+          if (this.invulnerable) {
+            ctx.strokeStyle = "rgba(255,255,255,0.7)";
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
-            ctx.arc(x + size * 0.3, y - size * 0.1, size * 0.35, 0, Math.PI * 2);
-            ctx.arc(x + size * 0.15, y + size * 0.15, size * 0.4, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.arc(
+              this.x - camera.x + this.width / 2,
+              this.y + this.height / 2,
+              15 + 5 * Math.sin(Date.now() / 100),
+              0,
+              Math.PI * 2,
+            );
+            ctx.stroke();
+          }
         }
-        
-        // Game over
-        function gameOver() {
-            gameState = "gameOver";
-            document.getElementById('finalScore').textContent = player.score;
-            document.getElementById('finalLevel').textContent = currentLevel;
-            document.getElementById('gameOverScreen').style.display = 'flex';
+
+        jump() {
+          if (!this.isJumping) {
+            this.velocityY = -this.jumpPower;
+            this.isJumping = true;
+          }
         }
-        
-        // Level complete
-        function levelComplete() {
-            gameState = "levelComplete";
-            document.getElementById('levelScore').textContent = player.score;
-            document.getElementById('completedLevel').textContent = currentLevel;
-            document.getElementById('levelCompleteScreen').style.display = 'flex';
+
+        resetPosition() {
+          this.x = this.checkpointX;
+          this.y = this.checkpointY;
+          this.velocityY = 0;
+          this.velocityX = 0;
+          this.invulnerable = true;
+          this.invulnerableTimer = 180; // 3 seconds
+          showPowerUpIndicator("Kebal aktif 3s", 180);
         }
-        
-        // Game win (completed all 5 levels)
-        function gameWin() {
-            gameState = "gameWin";
-            document.getElementById('winScore').textContent = player.score;
-            document.getElementById('gameWinScreen').style.display = 'flex';
+
+        setStartPosition(x, y) {
+          this.startX = x;
+          this.startY = y;
+          this.x = x;
+          this.y = y;
+          this.checkpointX = x;
+          this.checkpointY = y;
         }
-        
-        // Game loop
-        function gameLoop() {
-            if (gameState === "playing") {
-                update();
-                render();
+
+        updateCheckpoint(x, y) {
+          this.checkpointX = x;
+          this.checkpointY = y;
+          showCheckpointIndicator();
+        }
+
+        collectCoin() {
+          this.score += 10;
+          document.getElementById("score").textContent = this.score;
+        }
+
+        takeDamage() {
+          if (!this.invulnerable) {
+            this.lives--;
+            document.getElementById("lives").textContent = this.lives;
+            this.resetPosition(); // Respawn at checkpoint immediately
+            this.invulnerable = true;
+            this.invulnerableTimer = 180; // 3 seconds
+            showPowerUpIndicator("Kebal aktif 3s", 180);
+          }
+        }
+
+        addLife() {
+          this.lives++;
+          document.getElementById("lives").textContent = this.lives;
+        }
+
+        activateInvincibility() {
+          this.invulnerable = true;
+          this.invulnerableTimer = 180; // 3 seconds
+          showPowerUpIndicator("Kebal aktif 3s", 180);
+        }
+      }
+
+      // Ground obstacle class (all obstacles are on ground level)
+      class GroundObstacle {
+        constructor(x, width, type = "normal", speed = 0, range = 0) {
+          this.x = x;
+          this.width = width;
+          this.type = type; // normal, pit, spike, lava, moving
+          this.speed = speed;
+          this.range = range;
+          this.startX = x;
+          this.direction = 1;
+          this.y = canvas.height - 40; // Ground level
+          this.height = 40;
+        }
+
+        update() {
+          if (this.type === "moving") {
+            this.x += this.speed * this.direction;
+
+            if (this.x > this.startX + this.range) {
+              this.direction = -1;
+            } else if (this.x < this.startX) {
+              this.direction = 1;
             }
-            
-            requestAnimationFrame(gameLoop);
+          }
         }
-        
-        // Event listeners
-        document.addEventListener('keydown', (e) => {
-            keys[e.key.toLowerCase()] = true;
-            
-            // Prevent scrolling with arrow keys
-            if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].indexOf(e.key) !== -1) {
-                e.preventDefault();
-            }
-        });
-        
-        document.addEventListener('keyup', (e) => {
-            keys[e.key.toLowerCase()] = false;
-        });
-        
-        // Touch controls for mobile
-        document.getElementById('leftBtn').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            touchControls.left = true;
-        });
-        
-        document.getElementById('leftBtn').addEventListener('touchend', (e) => {
-            e.preventDefault();
-            touchControls.left = false;
-        });
-        
-        document.getElementById('rightBtn').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            touchControls.right = true;
-        });
-        
-        document.getElementById('rightBtn').addEventListener('touchend', (e) => {
-            e.preventDefault();
-            touchControls.right = false;
-        });
-        
-        document.getElementById('jumpBtn').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            touchControls.jump = true;
-        });
-        
-        document.getElementById('jumpBtn').addEventListener('touchend', (e) => {
-            e.preventDefault();
-            touchControls.jump = false;
-        });
-        
-        // Menu buttons
-        document.getElementById('startGameBtn').addEventListener('click', () => {
-            document.getElementById('menuScreen').style.display = 'none';
-            gameState = "playing";
-            currentLevel = 1;
-            initGame();
-        });
-        
-        document.getElementById('restartBtn').addEventListener('click', () => {
-            document.getElementById('gameOverScreen').style.display = 'none';
-            gameState = "playing";
-            currentLevel = 1;
-            initGame();
-        });
-        
-        document.getElementById('nextLevelBtn').addEventListener('click', () => {
-            document.getElementById('levelCompleteScreen').style.display = 'none';
-            gameState = "playing";
-            currentLevel++;
-            if (currentLevel > 5) currentLevel = 1; // Should not happen normally
-            initGame();
-        });
-        
-        document.getElementById('playAgainBtn').addEventListener('click', () => {
-            document.getElementById('gameWinScreen').style.display = 'none';
-            gameState = "playing";
-            currentLevel = 1;
-            initGame();
-        });
-        
-        // Start the game
-        window.addEventListener('load', () => {
-            // Start game loop
-            gameLoop();
-            
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                // Maintain aspect ratio but fit screen
-                const containerWidth = gameContainer.clientWidth;
-                const containerHeight = gameContainer.clientHeight;
-                
-                // Keep 16:9 aspect ratio
-                const aspectRatio = 16/9;
-                let newWidth = containerWidth;
-                let newHeight = containerWidth / aspectRatio;
-                
-                if (newHeight > containerHeight) {
-                    newHeight = containerHeight;
-                    newWidth = containerHeight * aspectRatio;
+
+        draw() {
+          switch (this.type) {
+            case "normal":
+              // Only draw grass top
+              ctx.fillStyle = "#567D46";
+              ctx.fillRect(this.x - camera.x, this.y, this.width, 10);
+              break;
+            case "pit":
+              // Draw pit (empty space)
+              // Add some depth effect
+              ctx.fillStyle = "#2E2E2E";
+              for (let i = 0; i < this.width; i += 10) {
+                ctx.fillRect(this.x - camera.x + i, this.y, 5, 20);
+              }
+              break;
+            case "spike":
+              ctx.fillStyle = "#567D46";
+              ctx.fillRect(this.x - camera.x, this.y, this.width, 10);
+
+              // Spikes
+              ctx.fillStyle = "#FF0000";
+              for (let i = 0; i < this.width; i += 20) {
+                ctx.beginPath();
+                ctx.moveTo(this.x - camera.x + i, this.y);
+                ctx.lineTo(this.x - camera.x + i + 10, this.y - 15);
+                ctx.lineTo(this.x - camera.x + i + 20, this.y);
+                ctx.closePath();
+                ctx.fill();
+              }
+              break;
+            case "lava":
+              ctx.fillStyle = "#567D46";
+              ctx.fillRect(this.x - camera.x, this.y, this.width, 10);
+
+              // Lava
+              ctx.fillStyle = "#FF4500";
+              ctx.fillRect(this.x - camera.x, this.y, this.width, 15);
+
+              // Animated lava effect
+              for (let i = 0; i < this.width; i += 30) {
+                const wave = Math.sin(Date.now() / 200 + i) * 5;
+                ctx.fillStyle = i % 2 === 0 ? "#FF8C00" : "#FF4500";
+                ctx.beginPath();
+                ctx.arc(
+                  this.x - camera.x + i,
+                  this.y + 7 + wave,
+                  5,
+                  0,
+                  Math.PI * 2,
+                );
+                ctx.fill();
+              }
+              break;
+            case "moving":
+              ctx.fillStyle = "#8B4513";
+              ctx.fillRect(this.x - camera.x, this.y, this.width, this.height);
+
+              // Grass top
+              ctx.fillStyle = "#567D46";
+              ctx.fillRect(this.x - camera.x, this.y, this.width, 10);
+
+              // Moving platform indicator
+              ctx.fillStyle = "#FFD700";
+              ctx.fillRect(
+                this.x - camera.x + 10,
+                this.y - 5,
+                this.width - 20,
+                5,
+              );
+              break;
+          }
+        }
+      }
+
+      // Coin class
+      class Coin {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.width = 20;
+          this.height = 20;
+          this.collected = false;
+          this.animation = 0;
+        }
+
+        draw() {
+          if (this.collected) return;
+
+          this.animation += 0.1;
+          const yOff = Math.sin(this.animation) * 5;
+
+          ctx.fillStyle = "#FFD700";
+          ctx.beginPath();
+          ctx.arc(
+            this.x - camera.x + 10,
+            this.y + 10 + yOff,
+            10,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+
+          // Coin details
+          ctx.fillStyle = "#DAA520";
+          ctx.beginPath();
+          ctx.arc(
+            this.x - camera.x + 10,
+            this.y + 10 + yOff,
+            7,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
+
+        collect() {
+          this.collected = true;
+          return 10;
+        }
+      }
+
+      // Enemy class with improved ground-based AI
+      class Enemy {
+        constructor(
+          x,
+          y,
+          width,
+          height,
+          type = "patrol",
+          speed = 1.5,
+          range = 100,
+          chaseRange = 200,
+        ) {
+          this.x = x;
+          this.y = y;
+          this.width = width;
+          this.height = height;
+          this.type = type; // patrol, chase, random
+          this.speed = speed;
+          this.range = range;
+          this.chaseRange = chaseRange;
+          this.startX = x;
+          this.direction = 1;
+          this.animation = 0;
+          this.patrolTimer = 0;
+          this.patrolDirection = 1;
+          this.groundY = y; // Store ground level
+        }
+
+        update(player) {
+          this.animation += 0.1;
+
+          switch (this.type) {
+            case "patrol":
+              // Standard patrol with occasional pauses
+              this.patrolTimer++;
+              if (this.patrolTimer > 120) {
+                // Pause for a bit
+                if (this.patrolTimer > 180) {
+                  this.patrolTimer = 0;
+                  this.direction *= -1;
                 }
-                
-                canvas.width = newWidth;
-                canvas.height = newHeight;
-                camera.width = canvas.width;
-                camera.height = canvas.height;
-            });
-            
-            // Initial resize
-            window.dispatchEvent(new Event('resize'));
+              } else {
+                this.x += this.speed * this.direction;
+
+                if (this.x > this.startX + this.range) {
+                  this.direction = -1;
+                } else if (this.x < this.startX) {
+                  this.direction = 1;
+                }
+              }
+              break;
+
+            case "chase":
+              // Chase player when in range, otherwise patrol
+              const distanceToPlayer = Math.abs(this.x - player.x);
+
+              if (distanceToPlayer < this.chaseRange) {
+                // Chase player
+                if (this.x < player.x) {
+                  this.x += this.speed;
+                } else {
+                  this.x -= this.speed;
+                }
+              } else {
+                // Patrol normally
+                this.x += this.speed * this.direction;
+
+                if (this.x > this.startX + this.range) {
+                  this.direction = -1;
+                } else if (this.x < this.startX) {
+                  this.direction = 1;
+                }
+              }
+              break;
+
+            case "random":
+              // Random movement with direction changes
+              this.patrolTimer++;
+
+              if (this.patrolTimer > 60) {
+                this.patrolDirection = Math.random() > 0.5 ? 1 : -1;
+                this.patrolTimer = 0;
+              }
+
+              this.x += this.speed * this.patrolDirection;
+
+              // Stay within range
+              if (this.x > this.startX + this.range) {
+                this.x = this.startX + this.range;
+                this.patrolDirection = -1;
+              } else if (this.x < this.startX) {
+                this.x = this.startX;
+                this.patrolDirection = 1;
+              }
+              break;
+          }
+        }
+
+        draw() {
+          // Body
+          ctx.fillStyle = "#FF0000";
+          ctx.fillRect(this.x - camera.x, this.y, this.width, this.height);
+
+          // Eyes
+          const eyeOffset = Math.sin(this.animation) * 2;
+          ctx.fillStyle = "white";
+          ctx.fillRect(this.x - camera.x + 5, this.y + 8 + eyeOffset, 5, 5);
+          ctx.fillRect(
+            this.x - camera.x + this.width - 10,
+            this.y + 8 + eyeOffset,
+            5,
+            5,
+          );
+
+          // Angry eyebrows
+          ctx.strokeStyle = "black";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(this.x - camera.x + 3, this.y + 5 + eyeOffset);
+          ctx.lineTo(this.x - camera.x + 8, this.y + 3 + eyeOffset);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(
+            this.x - camera.x + this.width - 8,
+            this.y + 3 + eyeOffset,
+          );
+          ctx.lineTo(
+            this.x - camera.x + this.width - 3,
+            this.y + 5 + eyeOffset,
+          );
+          ctx.stroke();
+        }
+      }
+
+      // Power-up class
+      class PowerUp {
+        constructor(x, y, type) {
+          this.x = x;
+          this.y = y;
+          this.width = 25;
+          this.height = 25;
+          this.type = type; // life, invincibility
+          this.collected = false;
+          this.animation = 0;
+        }
+
+        draw() {
+          if (this.collected) return;
+
+          this.animation += 0.1;
+          const yOff = Math.sin(this.animation) * 5;
+
+          switch (this.type) {
+            case "life":
+              ctx.fillStyle = "#FF0000";
+              ctx.beginPath();
+              ctx.moveTo(this.x - camera.x + 12, this.y + 5 + yOff);
+              ctx.lineTo(this.x - camera.x + 5, this.y + 12 + yOff);
+              ctx.lineTo(this.x - camera.x + 12, this.y + 20 + yOff);
+              ctx.lineTo(this.x - camera.x + 19, this.y + 12 + yOff);
+              ctx.closePath();
+              ctx.fill();
+              break;
+            case "invincibility":
+              ctx.fillStyle = "#00FFFF";
+              ctx.beginPath();
+              ctx.arc(
+                this.x - camera.x + 12,
+                this.y + 12 + yOff,
+                12,
+                0,
+                Math.PI * 2,
+              );
+              ctx.fill();
+
+              // Star effect
+              ctx.fillStyle = "#FFFFFF";
+              ctx.beginPath();
+              ctx.arc(
+                this.x - camera.x + 12,
+                this.y + 12 + yOff,
+                5,
+                0,
+                Math.PI * 2,
+              );
+              ctx.fill();
+              break;
+          }
+        }
+
+        collect(player) {
+          this.collected = true;
+          switch (this.type) {
+            case "life":
+              player.addLife();
+              showPowerUpIndicator("+1 Nyawa", 120);
+              break;
+            case "invincibility":
+              player.activateInvincibility();
+              break;
+          }
+        }
+      }
+
+      // Checkpoint class
+      class Checkpoint {
+        constructor(x) {
+          this.x = x;
+          this.width = 30;
+          this.height = 50;
+          this.activated = false;
+          this.animation = 0;
+          this.y = canvas.height - 90;
+        }
+
+        draw() {
+          // Flag pole
+          ctx.fillStyle = "#8B4513";
+          ctx.fillRect(this.x - camera.x + 13, this.y, 4, 40);
+
+          // Flag - changes color when activated
+          this.animation += 0.05;
+          const wave = Math.sin(this.animation) * 3;
+          const color = this.activated ? "#00FF00" : "#FF0000";
+
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.moveTo(this.x - camera.x, this.y + 10);
+          ctx.lineTo(this.x - camera.x + 20, this.y + 5 + wave);
+          ctx.lineTo(this.x - camera.x, this.y + 1 + wave * 2);
+          ctx.lineTo(this.x - camera.x + 20, this.y - 3 + wave);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        activate() {
+          this.activated = true;
+          this.animation = 0;
+        }
+      }
+
+      // Flag class (finish line)
+      class Flag {
+        constructor(x) {
+          this.x = x;
+          this.width = 30;
+          this.height = 50;
+          this.poleHeight = 40;
+          this.animation = 0;
+          this.reached = false;
+          this.y = canvas.height - 90;
+        }
+
+        draw() {
+          if (this.reached) return;
+
+          // Flag pole
+          ctx.fillStyle = "#8B4513";
+          ctx.fillRect(this.x - camera.x + 13, this.y, 4, this.poleHeight);
+
+          // Flag
+          this.animation += 0.05;
+          const wave = Math.sin(this.animation) * 3;
+
+          ctx.fillStyle = "#FFD700"; // Gold color for final flag
+          ctx.beginPath();
+          ctx.moveTo(this.x - camera.x, this.y + 10);
+          ctx.lineTo(this.x - camera.x + 20, this.y + 5 + wave);
+          ctx.lineTo(this.x - camera.x, this.y + 1 + wave * 2);
+          ctx.lineTo(this.x - camera.x + 20, this.y - 3 + wave);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      // Particle class for effects
+      class Particle {
+        constructor(x, y, color) {
+          this.x = x;
+          this.y = y;
+          this.size = Math.random() * 5 + 2;
+          this.speedX = Math.random() * 3 - 1.5;
+          this.speedY = Math.random() * 3 - 1.5;
+          this.color = color;
+          this.life = 30;
+        }
+
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+          this.life--;
+          this.size *= 0.95;
+        }
+
+        draw() {
+          ctx.fillStyle = this.color;
+          ctx.beginPath();
+          ctx.arc(this.x - camera.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Game objects
+      let player;
+      let groundObstacles = [];
+      let coins = [];
+      let enemies = [];
+      let powerUps = [];
+      let checkpoints = [];
+      let flag;
+      let particles = [];
+
+      // Input handling
+      const keys = {};
+      let touchControls = {
+        left: false,
+        right: false,
+        jump: false,
+      };
+
+      // Initialize game
+      function initGame() {
+        // Reset death counter
+        deathsThisLevel = 0;
+        document.getElementById("deathCount").textContent = deathsThisLevel;
+
+        // Create player
+        player = new Player(100, canvas.height - 90, "#FF4444", {
+          left: "a",
+          right: "d",
+          jump: "w",
         });
+
+        // Set start position
+        player.setStartPosition(100, canvas.height - 90);
+
+        // Generate level
+        generateLevel(currentLevel);
+
+        // Reset UI
+        document.getElementById("score").textContent = player.score;
+        document.getElementById("lives").textContent = player.lives;
+        document.getElementById("currentLevel").textContent = currentLevel;
+        document.getElementById("completedLevel").textContent = currentLevel;
+
+        // Reset camera
+        camera.x = 0;
+      }
+
+      // Update camera to follow player
+      function updateCamera() {
+        // Keep player in the left 2/3 of the screen
+        const targetX = player.x - camera.width * 0.3;
+
+        // Smooth camera movement
+        camera.x += (targetX - camera.x) * camera.lerpFactor;
+
+        // Don't scroll past left edge
+        camera.x = Math.max(0, camera.x);
+
+        // Don't scroll past right edge (level width)
+        const levelWidth = getLevelWidth(currentLevel);
+        camera.x = Math.min(camera.x, levelWidth - camera.width);
+      }
+
+      // Get level width based on current level
+      function getLevelWidth(level) {
+        // Return appropriate width for each level
+        switch (level) {
+          case 1:
+            return 3000;
+          case 2:
+            return 3500;
+          case 3:
+            return 4000;
+          case 4:
+            return 4500;
+          case 5:
+            return 5000;
+          default:
+            return 3000;
+        }
+      }
+
+      // Generate level based on current level
+      function generateLevel(level) {
+        groundObstacles = [];
+        coins = [];
+        enemies = [];
+        powerUps = [];
+        checkpoints = [];
+
+        // Base ground - continuous but with gaps and hazards
+        const levelWidth = getLevelWidth(level);
+        const groundY = canvas.height - 40; // Ground level
+
+        // Level 1 design - ground-based obstacles only
+        if (level === 1) {
+          // Continuous ground segments
+          groundObstacles.push(new GroundObstacle(0, 400, "normal"));
+          groundObstacles.push(new GroundObstacle(600, 400, "normal"));
+          groundObstacles.push(new GroundObstacle(1200, 400, "normal"));
+          groundObstacles.push(new GroundObstacle(1800, 400, "normal"));
+          groundObstacles.push(new GroundObstacle(2400, 600, "normal"));
+
+          // Lava sections
+          groundObstacles.push(new GroundObstacle(1000, 200, "lava"));
+
+          // Spike sections
+          groundObstacles.push(new GroundObstacle(1600, 200, "spike"));
+
+          // Moving platform
+          groundObstacles.push(
+            new GroundObstacle(2200, 150, "moving", 1.5, 200),
+          );
+
+          // Coins - near ground level for easier collection
+          for (let i = 0; i < 15; i++) {
+            coins.push(new Coin(200 + i * 150, canvas.height - 80));
+          }
+          coins.push(new Coin(1100, canvas.height - 80)); // Above lava
+          coins.push(new Coin(1700, canvas.height - 80)); // Above spikes
+          coins.push(new Coin(2300, canvas.height - 80)); // Above moving platform
+
+          // Enemies - fewer enemies, all on ground level
+          // Enemies - fewer and spaced out
+          enemies.push(
+            new Enemy(700, canvas.height - 60, 30, 20, "patrol", 1.2, 80),
+          );
+
+          // Power-ups
+          powerUps.push(new PowerUp(800, canvas.height - 70, "invincibility"));
+          powerUps.push(new PowerUp(1400, canvas.height - 70, "life"));
+
+          // Checkpoints - placed with buffer from hazards
+          checkpoints.push(new Checkpoint(350)); // After first platform segment
+          checkpoints.push(new Checkpoint(900)); // Before lava section (buffered)
+          checkpoints.push(new Checkpoint(1500)); // Before spike section (buffered)
+          checkpoints.push(new Checkpoint(2100)); // Before moving platform (buffered)
+
+          // Flag with safe zone
+          flag = new Flag(2800);
+          groundObstacles.push(new GroundObstacle(2700, 100, "normal")); // Safe zone before flag
+          groundObstacles.push(new GroundObstacle(2900, 100, "normal")); // Safe zone after flag
+
+          // Safety zones: remove enemies too close to flag and checkpoints
+          const SAFE_FLAG_RADIUS = 300;
+          enemies = enemies.filter((e) => e.x < flag.x - SAFE_FLAG_RADIUS);
+          const SAFE_CP_RADIUS = 200;
+          enemies = enemies.filter(
+            (e) => !checkpoints.some((cp) => Math.abs(e.x - cp.x) < SAFE_CP_RADIUS),
+          );
+        }
+        // Level 2 design
+        else if (level === 2) {
+          // Ground segments with more gaps
+          groundObstacles.push(new GroundObstacle(0, 300, "normal"));
+          groundObstacles.push(new GroundObstacle(500, 300, "normal"));
+          groundObstacles.push(new GroundObstacle(900, 300, "normal"));
+          groundObstacles.push(new GroundObstacle(1300, 300, "normal"));
+          groundObstacles.push(new GroundObstacle(1700, 300, "normal"));
+          groundObstacles.push(new GroundObstacle(2100, 300, "normal"));
+          groundObstacles.push(new GroundObstacle(2500, 1000, "normal"));
+
+          // Lava sections
+          groundObstacles.push(new GroundObstacle(700, 150, "lava"));
+          groundObstacles.push(new GroundObstacle(1500, 200, "lava"));
+          groundObstacles.push(new GroundObstacle(2300, 250, "lava"));
+
+          // Spike sections
+          groundObstacles.push(new GroundObstacle(1100, 150, "spike"));
+          groundObstacles.push(new GroundObstacle(1900, 200, "spike"));
+
+          // Moving platforms
+          groundObstacles.push(new GroundObstacle(2700, 150, "moving", 2, 300));
+          groundObstacles.push(
+            new GroundObstacle(3100, 100, "moving", 1.5, 200),
+          );
+
+          // Coins - near ground level for easier collection
+          for (let i = 0; i < 20; i++) {
+            coins.push(new Coin(150 + i * 120, canvas.height - 80));
+          }
+          for (let i = 0; i < 5; i++) {
+            coins.push(new Coin(750 + i * 400, canvas.height - 80));
+          }
+
+          // Enemies - reduce density and avoid stacking types
+          enemies.push(
+            new Enemy(600, canvas.height - 60, 30, 20, "patrol", 1.2, 80),
+          );
+          enemies.push(
+            new Enemy(1600, canvas.height - 60, 30, 20, "random", 1.4, 100),
+          );
+
+          // Power-ups
+          powerUps.push(new PowerUp(600, canvas.height - 70, "invincibility"));
+          powerUps.push(new PowerUp(1000, canvas.height - 70, "life"));
+          powerUps.push(new PowerUp(1400, canvas.height - 70, "invincibility"));
+          powerUps.push(new PowerUp(1800, canvas.height - 70, "life"));
+          powerUps.push(new PowerUp(2200, canvas.height - 70, "invincibility"));
+          powerUps.push(new PowerUp(2600, canvas.height - 70, "life"));
+
+          // Checkpoints - ensure safer spacing
+          checkpoints.push(new Checkpoint(250));
+          checkpoints.push(new Checkpoint(650));
+          checkpoints.push(new Checkpoint(1200));
+          checkpoints.push(new Checkpoint(2000));
+          checkpoints.push(new Checkpoint(2600));
+
+          // Flag with generous safe zone
+          flag = new Flag(3800);
+          groundObstacles.push(new GroundObstacle(3700, 100, "normal")); // 100px safe zone before flag
+          groundObstacles.push(new GroundObstacle(3900, 100, "normal")); // 100px safe zone after flag
+
+          // Safety zones
+          const SAFE_FLAG_RADIUS2 = 300;
+          enemies = enemies.filter((e) => e.x < flag.x - SAFE_FLAG_RADIUS2);
+          const SAFE_CP_RADIUS2 = 200;
+          enemies = enemies.filter(
+            (e) => !checkpoints.some((cp) => Math.abs(e.x - cp.x) < SAFE_CP_RADIUS2),
+          );
+        }
+        // Level 3 design
+        else if (level === 3) {
+          // More complex ground layout with alternating obstacles
+          groundObstacles.push(new GroundObstacle(0, 250, "normal"));
+          groundObstacles.push(new GroundObstacle(450, 250, "normal"));
+          groundObstacles.push(new GroundObstacle(850, 250, "normal"));
+          groundObstacles.push(new GroundObstacle(1250, 250, "normal"));
+          groundObstacles.push(new GroundObstacle(1650, 250, "normal"));
+          groundObstacles.push(new GroundObstacle(2050, 250, "normal"));
+          groundObstacles.push(new GroundObstacle(2450, 250, "normal"));
+          groundObstacles.push(new GroundObstacle(2850, 1150, "normal"));
+
+          // Lava sections
+          groundObstacles.push(new GroundObstacle(650, 200, "lava"));
+          groundObstacles.push(new GroundObstacle(1450, 200, "lava"));
+          groundObstacles.push(new GroundObstacle(2250, 200, "lava"));
+          groundObstacles.push(new GroundObstacle(3050, 300, "lava"));
+
+          // Spike sections
+          groundObstacles.push(new GroundObstacle(1050, 200, "spike"));
+          groundObstacles.push(new GroundObstacle(1850, 200, "spike"));
+          groundObstacles.push(new GroundObstacle(2650, 200, "spike"));
+
+          // Moving platforms
+          groundObstacles.push(
+            new GroundObstacle(3250, 150, "moving", 2.5, 400),
+          );
+          groundObstacles.push(new GroundObstacle(3650, 100, "moving", 2, 300));
+          groundObstacles.push(
+            new GroundObstacle(4050, 150, "moving", 1.5, 200),
+          );
+
+          // Coins - near ground level for easier collection
+          for (let i = 0; i < 25; i++) {
+            coins.push(new Coin(125 + i * 100, canvas.height - 80));
+          }
+          for (let i = 0; i < 8; i++) {
+            coins.push(new Coin(675 + i * 400, canvas.height - 80));
+          }
+
+          // Enemies - reduce overall count
+          enemies.push(
+            new Enemy(800, canvas.height - 60, 30, 20, "patrol", 1.4, 70),
+          );
+          enemies.push(
+            new Enemy(2000, canvas.height - 60, 30, 20, "random", 1.6, 120),
+          );
+
+          // Power-ups
+          for (let i = 0; i < 8; i++) {
+            powerUps.push(
+              new PowerUp(
+                450 + i * 500,
+                canvas.height - 70,
+                i % 2 === 0 ? "invincibility" : "life",
+              ),
+            );
+          }
+
+          // Checkpoints - spaced and safe
+          checkpoints.push(new Checkpoint(250));
+          checkpoints.push(new Checkpoint(900));
+          checkpoints.push(new Checkpoint(1700));
+          checkpoints.push(new Checkpoint(2600));
+
+          // Flag with generous safe zone
+          flag = new Flag(4200);
+          groundObstacles.push(new GroundObstacle(4100, 100, "normal")); // 100px safe zone before flag
+          groundObstacles.push(new GroundObstacle(4300, 100, "normal")); // 100px safe zone after flag
+
+          // Safety zones
+          const SAFE_FLAG_RADIUS3 = 350;
+          enemies = enemies.filter((e) => e.x < flag.x - SAFE_FLAG_RADIUS3);
+          const SAFE_CP_RADIUS3 = 200;
+          enemies = enemies.filter(
+            (e) => !checkpoints.some((cp) => Math.abs(e.x - cp.x) < SAFE_CP_RADIUS3),
+          );
+        }
+        // Level 4 design
+        else if (level === 4) {
+          // Challenging ground layout with narrow passages
+          groundObstacles.push(new GroundObstacle(0, 200, "normal"));
+          groundObstacles.push(new GroundObstacle(400, 200, "normal"));
+          groundObstacles.push(new GroundObstacle(800, 200, "normal"));
+          groundObstacles.push(new GroundObstacle(1200, 200, "normal"));
+          groundObstacles.push(new GroundObstacle(1600, 200, "normal"));
+          groundObstacles.push(new GroundObstacle(2000, 200, "normal"));
+          groundObstacles.push(new GroundObstacle(2400, 200, "normal"));
+          groundObstacles.push(new GroundObstacle(2800, 200, "normal"));
+          groundObstacles.push(new GroundObstacle(3200, 1800, "normal"));
+
+          // Lava sections (wider and more frequent)
+          groundObstacles.push(new GroundObstacle(600, 200, "lava"));
+          groundObstacles.push(new GroundObstacle(1000, 250, "lava"));
+          groundObstacles.push(new GroundObstacle(1400, 300, "lava"));
+          groundObstacles.push(new GroundObstacle(1800, 350, "lava"));
+          groundObstacles.push(new GroundObstacle(2200, 400, "lava"));
+          groundObstacles.push(new GroundObstacle(2600, 450, "lava"));
+          groundObstacles.push(new GroundObstacle(3000, 500, "lava"));
+          groundObstacles.push(new GroundObstacle(3600, 600, "lava"));
+
+          // Spike sections
+          groundObstacles.push(new GroundObstacle(3400, 200, "spike"));
+          groundObstacles.push(new GroundObstacle(4000, 250, "spike"));
+
+          // Moving platforms (faster and with wider range)
+          groundObstacles.push(new GroundObstacle(3800, 150, "moving", 3, 500));
+          groundObstacles.push(
+            new GroundObstacle(4200, 100, "moving", 2.5, 400),
+          );
+          groundObstacles.push(new GroundObstacle(4600, 150, "moving", 2, 300));
+
+          // Coins - near ground level for easier collection
+          for (let i = 0; i < 30; i++) {
+            coins.push(new Coin(100 + i * 80, canvas.height - 80));
+          }
+          for (let i = 0; i < 10; i++) {
+            coins.push(new Coin(600 + i * 400, canvas.height - 80));
+          }
+
+          // Enemies - keep it reasonable
+          enemies.push(
+            new Enemy(1200, canvas.height - 60, 30, 20, "patrol", 1.6, 60),
+          );
+          enemies.push(
+            new Enemy(2600, canvas.height - 60, 30, 20, "random", 1.7, 120),
+          );
+
+          // Power-ups (more frequent but harder to reach)
+          for (let i = 0; i < 10; i++) {
+            powerUps.push(
+              new PowerUp(
+                400 + i * 400,
+                canvas.height - 70,
+                i % 2 === 0 ? "invincibility" : "life",
+              ),
+            );
+          }
+
+          // Checkpoints - ensure safer spacing
+          checkpoints.push(new Checkpoint(200));
+          checkpoints.push(new Checkpoint(900));
+          checkpoints.push(new Checkpoint(1800));
+          checkpoints.push(new Checkpoint(2700));
+          checkpoints.push(new Checkpoint(3400));
+          groundObstacles.push(new GroundObstacle(1050, 150, "normal"));
+          groundObstacles.push(new GroundObstacle(1400, 150, "normal"));
+          groundObstacles.push(new GroundObstacle(1750, 150, "normal"));
+          groundObstacles.push(new GroundObstacle(2100, 150, "normal"));
+          groundObstacles.push(new GroundObstacle(2450, 150, "normal"));
+          groundObstacles.push(new GroundObstacle(2800, 150, "normal"));
+          groundObstacles.push(new GroundObstacle(3150, 3850, "normal"));
+
+          // Lava sections (very wide and frequent)
+          groundObstacles.push(new GroundObstacle(500, 200, "lava"));
+          groundObstacles.push(new GroundObstacle(850, 250, "lava"));
+          groundObstacles.push(new GroundObstacle(1200, 300, "lava"));
+          groundObstacles.push(new GroundObstacle(1550, 350, "lava"));
+          groundObstacles.push(new GroundObstacle(1900, 400, "lava"));
+          groundObstacles.push(new GroundObstacle(2250, 450, "lava"));
+          groundObstacles.push(new GroundObstacle(2600, 500, "lava"));
+          groundObstacles.push(new GroundObstacle(2950, 550, "lava"));
+          groundObstacles.push(new GroundObstacle(3300, 600, "lava"));
+          groundObstacles.push(new GroundObstacle(3700, 700, "lava"));
+          groundObstacles.push(new GroundObstacle(4100, 800, "lava"));
+
+          // Spike sections (strategically placed)
+          groundObstacles.push(new GroundObstacle(3500, 250, "spike"));
+          groundObstacles.push(new GroundObstacle(4300, 300, "spike"));
+          groundObstacles.push(new GroundObstacle(4700, 350, "spike"));
+
+          // Moving platforms (fast and with wide range)
+          groundObstacles.push(
+            new GroundObstacle(3900, 150, "moving", 3.5, 600),
+          );
+          groundObstacles.push(new GroundObstacle(4500, 100, "moving", 3, 500));
+          groundObstacles.push(
+            new GroundObstacle(5000, 150, "moving", 2.5, 400),
+          );
+
+          // Coins - near ground level for easier collection
+          for (let i = 0; i < 35; i++) {
+            coins.push(new Coin(75 + i * 70, canvas.height - 80));
+          }
+          for (let i = 0; i < 15; i++) {
+            coins.push(new Coin(500 + i * 350, canvas.height - 80));
+          }
+
+          // Minimal enemies with strategic placement
+          enemies.push(
+            new Enemy(1200, canvas.height - 60, 30, 20, "patrol", 1.8, 60),
+          );
+          enemies.push(
+            new Enemy(2600, canvas.height - 60, 30, 20, "random", 1.9, 120),
+          );
+
+          // Power-ups (strategically placed for help)
+          for (let i = 0; i < 12; i++) {
+            powerUps.push(
+              new PowerUp(
+                350 + i * 350,
+                canvas.height - 70,
+                i % 2 === 0 ? "invincibility" : "life",
+              ),
+            );
+          }
+
+          // Checkpoints (frequent but safer)
+          checkpoints.push(new Checkpoint(150));
+          checkpoints.push(new Checkpoint(800));
+          checkpoints.push(new Checkpoint(1600));
+          checkpoints.push(new Checkpoint(2400));
+          checkpoints.push(new Checkpoint(3200));
+
+          // Flag with generous safe zone
+          flag = new Flag(4900);
+          groundObstacles.push(new GroundObstacle(4800, 100, "normal")); // 100px safe zone before flag
+          groundObstacles.push(new GroundObstacle(5000, 100, "normal")); // 100px safe zone after flag
+
+          // Safety zones
+          const SAFE_FLAG_RADIUS5 = 400; // Final level: larger safe zone
+          enemies = enemies.filter((e) => e.x < flag.x - SAFE_FLAG_RADIUS5);
+          const SAFE_CP_RADIUS5 = 250;
+          enemies = enemies.filter(
+            (e) => !checkpoints.some((cp) => Math.abs(e.x - cp.x) < SAFE_CP_RADIUS5),
+          );
+        }
+      }
+
+      // Check collision between player and ground obstacle
+      function checkGroundCollision(player, obstacle) {
+        // Check if player is above the obstacle (only for normal ground)
+        if (
+          obstacle.type === "normal" &&
+          player.velocityY > 0 &&
+          player.y + player.height - player.velocityY <= obstacle.y &&
+          player.y + player.height > obstacle.y &&
+          player.x < obstacle.x + obstacle.width &&
+          player.x + player.width > obstacle.x
+        ) {
+          player.y = obstacle.y - player.height;
+          player.velocityY = 0;
+          player.isJumping = false;
+          return true;
+        }
+
+        // Check horizontal collision
+        if (player.velocityY <= 0) {
+          // Left side collision
+          if (
+            player.velocityX > 0 &&
+            player.x + player.width - player.velocityX <= obstacle.x &&
+            player.x + player.width > obstacle.x &&
+            player.y < obstacle.y + obstacle.height &&
+            player.y + player.height > obstacle.y
+          ) {
+            player.x = obstacle.x - player.width;
+            player.velocityX = 0;
+          }
+          // Right side collision
+          else if (
+            player.velocityX < 0 &&
+            player.x - player.velocityX >= obstacle.x + obstacle.width &&
+            player.x < obstacle.x + obstacle.width &&
+            player.y < obstacle.y + obstacle.height &&
+            player.y + player.height > obstacle.y
+          ) {
+            player.x = obstacle.x + obstacle.width;
+            player.velocityX = 0;
+          }
+        }
+
+        // Check if player is on a moving platform
+        if (
+          obstacle.type === "moving" &&
+          player.y + player.height <= obstacle.y + 5 &&
+          player.y + player.height >= obstacle.y - 5 &&
+          player.x < obstacle.x + obstacle.width &&
+          player.x + player.width > obstacle.x
+        ) {
+          player.x += obstacle.speed * obstacle.direction;
+        }
+
+        // Check if player is in a hazard area
+        if (
+          (obstacle.type === "spike" || obstacle.type === "lava") &&
+          player.x < obstacle.x + obstacle.width &&
+          player.x + player.width > obstacle.x &&
+          player.y < obstacle.y + obstacle.height &&
+          player.y + player.height > obstacle.y
+        ) {
+          player.takeDamage();
+        }
+
+        return false;
+      }
+
+      // Check if player is over a pit
+      function checkPitCollision(player, obstacles) {
+        let overPit = true;
+
+        // Check if there's ground under the player
+        for (const obstacle of obstacles) {
+          if (obstacle.type === "normal" || obstacle.type === "moving") {
+            if (
+              player.x + player.width / 2 > obstacle.x &&
+              player.x + player.width / 2 < obstacle.x + obstacle.width &&
+              player.y + player.height >= obstacle.y
+            ) {
+              overPit = false;
+              break;
+            }
+          }
+        }
+
+        return overPit;
+      }
+
+      // Check collision between player and object
+      function checkCollision(player, obj) {
+        return (
+          player.x < obj.x + obj.width &&
+          player.x + player.width > obj.x &&
+          player.y < obj.y + obj.height &&
+          player.y + player.height > obj.y
+        );
+      }
+
+      // Create particle effect
+      function createParticles(x, y, color, count) {
+        for (let i = 0; i < count; i++) {
+          particles.push(new Particle(x, y, color));
+        }
+      }
+
+      // Show power-up indicator
+      function showPowerUpIndicator(text, duration) {
+        const indicator = document.getElementById("powerUpIndicator");
+        indicator.textContent = text;
+        indicator.style.display = "block";
+
+        setTimeout(
+          () => {
+            indicator.style.display = "none";
+          },
+          duration * (1000 / 60),
+        ); // Convert frames to ms
+      }
+
+      // Show checkpoint indicator
+      function showCheckpointIndicator() {
+        const indicator = document.getElementById("checkpointIndicator");
+        indicator.style.display = "block";
+
+        setTimeout(() => {
+          indicator.style.display = "none";
+        }, 2000);
+      }
+
+      // Update game state
+      function update() {
+        // Handle player input
+        player.velocityX = 0;
+        if (
+          (keys[player.controls.left] || touchControls.left) &&
+          !keys[player.controls.right] &&
+          !touchControls.right
+        ) {
+          player.velocityX = -player.speed;
+          player.direction = -1;
+        }
+        if (
+          (keys[player.controls.right] || touchControls.right) &&
+          !keys[player.controls.left] &&
+          !touchControls.left
+        ) {
+          player.velocityX = player.speed;
+          player.direction = 1;
+        }
+        if (
+          (keys[player.controls.jump] || touchControls.jump) &&
+          !player.isJumping
+        ) {
+          player.jump();
+          createParticles(player.x, player.y + player.height, "#888888", 5);
+        }
+
+        // Update player
+        player.update();
+
+        // Update camera
+        updateCamera();
+
+        // Check ground collisions
+        player.isJumping = true;
+        for (const obstacle of groundObstacles) {
+          if (obstacle.type !== "pit") {
+            checkGroundCollision(player, obstacle);
+          }
+        }
+
+        // Check if player is over a pit
+        if (checkPitCollision(player, groundObstacles)) {
+          // Player is over a pit, let them fall
+          player.isJumping = true;
+        }
+
+        // Check coin collection
+        for (const coin of coins) {
+          if (!coin.collected && checkCollision(player, coin)) {
+            coin.collect();
+            player.collectCoin();
+            createParticles(coin.x, coin.y + 10, "#FFD700", 10);
+          }
+        }
+
+        // Update enemies
+        for (const enemy of enemies) {
+          enemy.update(player);
+
+          // Check collision with player
+          if (checkCollision(player, enemy) && !player.invulnerable) {
+            player.takeDamage();
+            createParticles(
+              player.x + player.width / 2,
+              player.y + player.height / 2,
+              "#FF0000",
+              15,
+            );
+          }
+        }
+
+        // Update moving obstacles
+        for (const obstacle of groundObstacles) {
+          if (obstacle.type === "moving") {
+            obstacle.update();
+          }
+        }
+
+        // Check checkpoint collisions
+        for (const checkpoint of checkpoints) {
+          if (!checkpoint.activated && checkCollision(player, checkpoint)) {
+            checkpoint.activate();
+            player.updateCheckpoint(checkpoint.x, checkpoint.y);
+          }
+        }
+
+        // Check power-up collection
+        for (const powerUp of powerUps) {
+          if (!powerUp.collected && checkCollision(player, powerUp)) {
+            powerUp.collect(player);
+          }
+        }
+
+        // Check flag collision
+        if (flag && !flag.reached && checkCollision(player, flag)) {
+          flag.reached = true;
+          if (currentLevel < 5) {
+            levelComplete();
+          } else {
+            gameWin();
+          }
+        }
+
+        // Check game over (lives <= 0)
+        if (player.lives <= 0) {
+          // Check if we can respawn at checkpoint
+          if (deathsThisLevel < 2) {
+            deathsThisLevel++;
+            document.getElementById("deathCount").textContent = deathsThisLevel;
+            player.resetPosition();
+            player.lives = 3; // Reset lives for respawn
+            document.getElementById("lives").textContent = player.lives;
+          } else {
+            // Game over after 3 deaths
+            gameOver();
+          }
+        }
+
+        // Update particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          particles[i].update();
+          if (particles[i].life <= 0) {
+            particles.splice(i, 1);
+          }
+        }
+      }
+
+      // Render game
+      function render() {
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw background
+        drawBackground();
+
+        // Draw ground obstacles
+        for (const obstacle of groundObstacles) {
+          obstacle.draw();
+        }
+
+        // Draw coins
+        for (const coin of coins) {
+          coin.draw();
+        }
+
+        // Draw power-ups
+        for (const powerUp of powerUps) {
+          powerUp.draw();
+        }
+
+        // Draw checkpoints
+        for (const checkpoint of checkpoints) {
+          checkpoint.draw();
+        }
+
+        // Draw enemies
+        for (const enemy of enemies) {
+          enemy.draw();
+        }
+
+        // Draw flag
+        if (flag) {
+          flag.draw();
+        }
+
+        // Draw player
+        player.draw();
+
+        // Draw particles
+        for (const particle of particles) {
+          particle.draw();
+        }
+      }
+
+      // Draw background with parallax effect
+      function drawBackground() {
+        // Sky gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, "#87CEEB");
+        gradient.addColorStop(1, "#1E90FF");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Clouds with parallax effect
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        drawCloud(50 + ((camera.x * 0.1) % (canvas.width + 200)), 80, 60);
+        drawCloud(200 + ((camera.x * 0.05) % (canvas.width + 300)), 50, 80);
+        drawCloud(400 + ((camera.x * 0.15) % (canvas.width + 400)), 100, 70);
+        drawCloud(600 + ((camera.x * 0.08) % (canvas.width + 500)), 70, 90);
+
+        // Ground details (grass)
+        ctx.fillStyle = "#567D46";
+        for (let i = 0; i < canvas.width; i += 50) {
+          ctx.fillRect(
+            i - (camera.x % canvas.width),
+            canvas.height - 40,
+            20,
+            5,
+          );
+        }
+      }
+
+      // Draw cloud
+      function drawCloud(x, y, size) {
+        ctx.beginPath();
+        ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
+        ctx.arc(x + size * 0.3, y - size * 0.1, size * 0.35, 0, Math.PI * 2);
+        ctx.arc(x + size * 0.15, y + size * 0.15, size * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Game over
+      function gameOver() {
+        gameState = "gameOver";
+        document.getElementById("finalScore").textContent = player.score;
+        document.getElementById("finalLevel").textContent = currentLevel;
+        document.getElementById("gameOverScreen").style.display = "flex";
+      }
+
+      // Level complete
+      function levelComplete() {
+        gameState = "levelComplete";
+        document.getElementById("levelScore").textContent = player.score;
+        document.getElementById("completedLevel").textContent = currentLevel;
+        document.getElementById("levelCompleteScreen").style.display = "flex";
+      }
+
+      // Game win (completed all 5 levels)
+      function gameWin() {
+        gameState = "gameWin";
+        document.getElementById("winScore").textContent = player.score;
+        document.getElementById("gameWinScreen").style.display = "flex";
+      }
+
+      // Game loop
+      function gameLoop() {
+        if (gameState === "playing") {
+          update();
+          render();
+        }
+
+        requestAnimationFrame(gameLoop);
+      }
+
+      // Event listeners
+      document.addEventListener("keydown", (e) => {
+        keys[e.key.toLowerCase()] = true;
+
+        // Prevent scrolling with arrow keys
+        if (
+          ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].indexOf(
+            e.key,
+          ) !== -1
+        ) {
+          e.preventDefault();
+        }
+      });
+
+      document.addEventListener("keyup", (e) => {
+        keys[e.key.toLowerCase()] = false;
+      });
+
+      // Touch controls for mobile
+      document.getElementById("leftBtn").addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        touchControls.left = true;
+      });
+
+      document.getElementById("leftBtn").addEventListener("touchend", (e) => {
+        e.preventDefault();
+        touchControls.left = false;
+      });
+
+      document
+        .getElementById("rightBtn")
+        .addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          touchControls.right = true;
+        });
+
+      document.getElementById("rightBtn").addEventListener("touchend", (e) => {
+        e.preventDefault();
+        touchControls.right = false;
+      });
+
+      document.getElementById("jumpBtn").addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        touchControls.jump = true;
+      });
+
+      document.getElementById("jumpBtn").addEventListener("touchend", (e) => {
+        e.preventDefault();
+        touchControls.jump = false;
+      });
+
+      // Menu buttons
+      document.getElementById("startGameBtn").addEventListener("click", () => {
+        document.getElementById("menuScreen").style.display = "none";
+        gameState = "playing";
+        currentLevel = 1;
+        initGame();
+      });
+
+      document.getElementById("restartBtn").addEventListener("click", () => {
+        document.getElementById("gameOverScreen").style.display = "none";
+        gameState = "playing";
+        currentLevel = 1;
+        initGame();
+      });
+
+      document.getElementById("nextLevelBtn").addEventListener("click", () => {
+        document.getElementById("levelCompleteScreen").style.display = "none";
+        gameState = "playing";
+        currentLevel++;
+        if (currentLevel > 5) currentLevel = 1; // Should not happen normally
+        initGame();
+      });
+
+      document.getElementById("playAgainBtn").addEventListener("click", () => {
+        document.getElementById("gameWinScreen").style.display = "none";
+        gameState = "playing";
+        currentLevel = 1;
+        initGame();
+      });
+
+      // Start the game
+      window.addEventListener("load", () => {
+        // Start game loop
+        gameLoop();
+
+        // Handle window resize
+        window.addEventListener("resize", () => {
+          // Maintain aspect ratio but fit screen
+          const containerWidth = gameContainer.clientWidth;
+          const containerHeight = gameContainer.clientHeight;
+
+          // Keep 16:9 aspect ratio
+          const aspectRatio = 16 / 9;
+          let newWidth = containerWidth;
+          let newHeight = containerWidth / aspectRatio;
+
+          if (newHeight > containerHeight) {
+            newHeight = containerHeight;
+            newWidth = containerHeight * aspectRatio;
+          }
+
+          canvas.width = newWidth;
+          canvas.height = newHeight;
+          camera.width = canvas.width;
+          camera.height = canvas.height;
+        });
+
+        // Initial resize
+        window.dispatchEvent(new Event("resize"));
+      });
     </script>
-</body>
+  </body>
 </html>
